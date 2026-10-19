@@ -1,0 +1,727 @@
+{
+  "timestamp": "2026-10-18T20:02:19",
+  "model": "mlx-community/gemma-4-e4b-it-4bit",
+  "debias_order": true,
+  "suites": {
+    "support_triage": {
+      "department": {
+        "zero_data": {
+          "accuracy": 1.0,
+          "ece": 0.0029234886169433594,
+          "brier": 0.0001655887435777542,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 1.0,
+          "ms_per_case": 244.3264583319736
+        },
+        "predictions": [
+          {
+            "id": "t01",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999909996986389
+          },
+          {
+            "id": "t02",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9999074935913086
+          },
+          {
+            "id": "t03",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9985378980636597
+          },
+          {
+            "id": "t04",
+            "expected": "sales",
+            "got": "sales",
+            "confidence": 0.9995166659355164
+          },
+          {
+            "id": "t05",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999676942825317
+          },
+          {
+            "id": "t06",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999937415122986
+          },
+          {
+            "id": "t07",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9995346069335938
+          },
+          {
+            "id": "t08",
+            "expected": "sales",
+            "got": "sales",
+            "confidence": 0.999884843826294
+          },
+          {
+            "id": "t09",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999898672103882
+          },
+          {
+            "id": "t10",
+            "expected": "sales",
+            "got": "sales",
+            "confidence": 0.9990940093994141
+          },
+          {
+            "id": "t11",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9685176014900208
+          },
+          {
+            "id": "t12",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999836683273315
+          }
+        ],
+        "kfold": {
+          "accuracy": 1.0,
+          "ece": 0.002923409144083622,
+          "brier": 0.0001655887435777542,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 1.0,
+          "rungs": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "frustration": {
+        "zero_data": {
+          "accuracy": 0.6666666666666666,
+          "ece": 0.33285010357697803,
+          "brier": 0.5181582759056869,
+          "abstain_rate": 0.16666666666666663,
+          "accuracy_when_answering": 0.6,
+          "ms_per_case": 177.09557983713844
+        },
+        "predictions": [
+          {
+            "id": "t01",
+            "expected": 1,
+            "got": "2",
+            "confidence": 0.749264657497406
+          },
+          {
+            "id": "t02",
+            "expected": 0,
+            "got": "0",
+            "confidence": 0.9877809286117554
+          },
+          {
+            "id": "t03",
+            "expected": 2,
+            "got": "2",
+            "confidence": 0.9915362596511841
+          },
+          {
+            "id": "t04",
+            "expected": 0,
+            "got": "0",
+            "confidence": 0.953792929649353
+          },
+          {
+            "id": "t05",
+            "expected": 0,
+            "got": "1",
+            "confidence": 0.6372027397155762
+          },
+          {
+            "id": "t06",
+            "expected": 2,
+            "got": "2",
+            "confidence": 0.9949971437454224
+          },
+          {
+            "id": "t07",
+            "expected": 1,
+            "got": "1",
+            "confidence": 0.5159546732902527
+          },
+          {
+            "id": "t08",
+            "expected": 0,
+            "got": "0",
+            "confidence": 0.8201792240142822
+          },
+          {
+            "id": "t09",
+            "expected": 1,
+            "got": "2",
+            "confidence": 0.9256714582443237
+          },
+          {
+            "id": "t10",
+            "expected": 0,
+            "got": "1",
+            "confidence": 0.6115084886550903
+          },
+          {
+            "id": "t11",
+            "expected": 1,
+            "got": "1",
+            "confidence": 0.5196486711502075
+          },
+          {
+            "id": "t12",
+            "expected": 2,
+            "got": "2",
+            "confidence": 0.9982289671897888
+          }
+        ],
+        "kfold": {
+          "accuracy": 0.6666666666666666,
+          "ece": 0.33285008370876307,
+          "brier": 0.5181582759056869,
+          "abstain_rate": 0.16666666666666663,
+          "accuracy_when_answering": 0.6,
+          "rungs": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "is_urgent": {
+        "zero_data": {
+          "accuracy": 0.9166666666666666,
+          "ece": 0.09424121181170148,
+          "brier": 0.16950230975725547,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.9166666666666666,
+          "ms_per_case": 169.5808680863896
+        },
+        "predictions": [
+          {
+            "id": "t01",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999988079071045
+          },
+          {
+            "id": "t02",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.8286963701248169
+          },
+          {
+            "id": "t03",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999991059303284
+          },
+          {
+            "id": "t04",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9982708692550659
+          },
+          {
+            "id": "t05",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.997031569480896
+          },
+          {
+            "id": "t06",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999984502792358
+          },
+          {
+            "id": "t07",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9794262647628784
+          },
+          {
+            "id": "t08",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.999998927116394
+          },
+          {
+            "id": "t09",
+            "expected": false,
+            "got": "true",
+            "confidence": 0.9935697913169861
+          },
+          {
+            "id": "t10",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9929134845733643
+          },
+          {
+            "id": "t11",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999988079071045
+          },
+          {
+            "id": "t12",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.998384416103363
+          }
+        ],
+        "kfold": {
+          "accuracy": 0.9166666666666666,
+          "ece": 0.09634743630886079,
+          "brier": 0.1694297964077447,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.9166666666666666,
+          "rungs": [
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "treasury_ap_routing": {
+      "agent": {
+        "zero_data": {
+          "accuracy": 0.8787878787878788,
+          "ece": 0.09619464025352939,
+          "brier": 0.20078622138671873,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.8787878787878788,
+          "ms_per_case": 565.3923263783905
+        },
+        "predictions": [
+          {
+            "id": "p01",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9996868371963501
+          },
+          {
+            "id": "p02",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9945604205131531
+          },
+          {
+            "id": "p03",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9705946445465088
+          },
+          {
+            "id": "p04",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9979450106620789
+          },
+          {
+            "id": "p05",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9976106882095337
+          },
+          {
+            "id": "p06",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9951300024986267
+          },
+          {
+            "id": "p07",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9949206709861755
+          },
+          {
+            "id": "p08",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9985213875770569
+          },
+          {
+            "id": "p09",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9989398121833801
+          },
+          {
+            "id": "p10",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9979439973831177
+          },
+          {
+            "id": "p11",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9801644682884216
+          },
+          {
+            "id": "p12",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9984825253486633
+          },
+          {
+            "id": "r01",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999659061431885
+          },
+          {
+            "id": "r02",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999698400497437
+          },
+          {
+            "id": "r03",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999616146087646
+          },
+          {
+            "id": "r04",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999085664749146
+          },
+          {
+            "id": "r05",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9998703598976135
+          },
+          {
+            "id": "r06",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9995749592781067
+          },
+          {
+            "id": "r07",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9998173713684082
+          },
+          {
+            "id": "r08",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999473690986633
+          },
+          {
+            "id": "r09",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999405145645142
+          },
+          {
+            "id": "r10",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9997426867485046
+          },
+          {
+            "id": "r11",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999618530273438
+          },
+          {
+            "id": "r12",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9997823238372803
+          },
+          {
+            "id": "e01",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999796152114868
+          },
+          {
+            "id": "e02",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999676942825317
+          },
+          {
+            "id": "e03",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9996939301490784
+          },
+          {
+            "id": "e04",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999604225158691
+          },
+          {
+            "id": "e05",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999678730964661
+          },
+          {
+            "id": "e06",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999262094497681
+          },
+          {
+            "id": "e07",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999454617500305
+          },
+          {
+            "id": "e08",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.999735951423645
+          },
+          {
+            "id": "e09",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9998281002044678
+          },
+          {
+            "id": "e10",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999597072601318
+          },
+          {
+            "id": "e11",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999557137489319
+          },
+          {
+            "id": "e12",
+            "expected": "entitlements",
+            "got": "reconciliation_report",
+            "confidence": 0.9333958029747009
+          },
+          {
+            "id": "b01",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9999268054962158
+          },
+          {
+            "id": "b02",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9999488592147827
+          },
+          {
+            "id": "b03",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9998906850814819
+          },
+          {
+            "id": "b04",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9996305704116821
+          },
+          {
+            "id": "b05",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9999688863754272
+          },
+          {
+            "id": "b06",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9999446868896484
+          },
+          {
+            "id": "b07",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9996232986450195
+          },
+          {
+            "id": "b08",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9954791069030762
+          },
+          {
+            "id": "b09",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9981701374053955
+          },
+          {
+            "id": "b10",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9990822076797485
+          },
+          {
+            "id": "b11",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9994351863861084
+          },
+          {
+            "id": "b12",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9993044137954712
+          },
+          {
+            "id": "f01",
+            "expected": "faq",
+            "got": "out_of_scope",
+            "confidence": 0.6956161260604858
+          },
+          {
+            "id": "f02",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9977800250053406
+          },
+          {
+            "id": "f03",
+            "expected": "faq",
+            "got": "payment_search",
+            "confidence": 0.9984157681465149
+          },
+          {
+            "id": "f04",
+            "expected": "faq",
+            "got": "entitlements",
+            "confidence": 0.9998197555541992
+          },
+          {
+            "id": "f05",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.8311988711357117
+          },
+          {
+            "id": "f06",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9979719519615173
+          },
+          {
+            "id": "f07",
+            "expected": "faq",
+            "got": "payment_search",
+            "confidence": 0.7222357392311096
+          },
+          {
+            "id": "f08",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9594702124595642
+          },
+          {
+            "id": "f09",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9894272685050964
+          },
+          {
+            "id": "f10",
+            "expected": "faq",
+            "got": "payment_search",
+            "confidence": 0.7937818765640259
+          },
+          {
+            "id": "f11",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9891367554664612
+          },
+          {
+            "id": "f12",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9877396821975708
+          },
+          {
+            "id": "o01",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.7600303292274475
+          },
+          {
+            "id": "o02",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.947110652923584
+          },
+          {
+            "id": "o03",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.9970776438713074
+          },
+          {
+            "id": "o04",
+            "expected": "out_of_scope",
+            "got": "faq",
+            "confidence": 0.883905827999115
+          },
+          {
+            "id": "o05",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.9696400761604309
+          },
+          {
+            "id": "o06",
+            "expected": "out_of_scope",
+            "got": "payment_search",
+            "confidence": 0.9828280806541443
+          }
+        ],
+        "kfold": {
+          "accuracy": 0.9090909090909091,
+          "ece": 0.06912317510807156,
+          "brier": 0.16404715022397628,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.9090909090909091,
+          "rungs": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    }
+  }
+}

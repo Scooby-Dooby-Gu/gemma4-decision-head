@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Trained heads and model weights
+heads/
+*.npz
+*.safetensors
+*.gguf
+*.bin
+models/
+.cache/
+.hf_cache/
+
+# OS
+.DS_Store
