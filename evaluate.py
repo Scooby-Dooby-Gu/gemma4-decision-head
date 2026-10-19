@@ -1,7 +1,7 @@
 """Score the decision model on jev-vs-local suites: accuracy, calibration and latency.
 
     python evaluate.py                                   # zero-data, every suite
-    python evaluate.py --suite ../jev-vs-local/cases/support_triage.json
+    python evaluate.py --suite cases/support_triage.json
     python evaluate.py --folds 5                         # also k-fold the upgrade head
     python evaluate.py --no-debias                       # listed order only (half the passes)
 
@@ -21,7 +21,7 @@ from decision import DecisionModel
 from decision.head import Head
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_CASES = HERE.parent / "jev-vs-local" / "cases"
+DEFAULT_CASES = HERE / "cases"
 
 
 def metrics(p, y, abstain_margin):

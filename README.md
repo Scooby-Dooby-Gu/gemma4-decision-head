@@ -53,9 +53,8 @@ pip install -r requirements.txt
 
 ## Run
 
-The evaluation and training suites use the [jev-vs-local](#data) case format. `evaluate.py`
-looks for them in `../jev-vs-local/cases/` next to this repo by default; pass `--suite` to
-point at others.
+`evaluate.py` scores every suite in [`cases/`](cases/) by default (see [Data](#data)); pass
+`--suite` to point at others.
 
 ```bash
 # Zero-data accuracy, ECE, Brier and abstain rate on every suite
@@ -64,7 +63,7 @@ python evaluate.py --folds 5     # plus k-fold scores for the upgrade head
 python evaluate.py --no-debias   # listed order only, to measure order bias
 
 # Train heads from labelled cases, then serve Jev's /v1/systemone on :8092
-python train.py path/to/suite.json --out heads/
+python train.py cases/treasury_ap_routing.json --out heads/
 python serve.py --heads heads/
 ```
 
@@ -86,8 +85,15 @@ urgency 91.7%, frustration 66.7%; treasury AP routing, 66 cases: 87.9%).
 
 A suite is a JSON file `{"name", "questions": {key: question}, "cases": [{"id", "state",
 "expected": {key: answer}}]}`, where a question is `choice` (criteria dict), `score` (list of
-level descriptions) or `noul` (a yes/no statement). The suites used for the numbers above
-are not part of this repo.
+level descriptions) or `noul` (a yes/no statement). Two hand-written sample suites are included:
+
+| Suite | Cases | Questions |
+|---|---|---|
+| `cases/support_triage.json` | 12 | `department` (choice), `frustration` (score 0 to 2), `is_urgent` (noul) |
+| `cases/treasury_ap_routing.json` | 66 | `agent` (choice of five agents or out of scope), with tags such as `clear` and `terse` |
+
+They are small and synthetic: enough to show the zero-data result, too few to both train and
+measure a probe.
 
 ## Tests
 

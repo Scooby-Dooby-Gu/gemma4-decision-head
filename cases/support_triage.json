@@ -1,0 +1,90 @@
+{
+  "name": "support_triage",
+  "description": "Customer support tickets: route to a team, rate frustration, flag urgency.",
+  "questions": {
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should handle this",
+      "criteria": {
+        "billing": "Payment, invoice, refund, or subscription issues",
+        "technical": "Bugs, errors, outages, or integration problems",
+        "sales": "Pricing, plan upgrades, or new account questions"
+      }
+    },
+    "frustration": {
+      "type": "score",
+      "instructions": "How frustrated the customer appears",
+      "criteria": [
+        "Calm, just stating facts",
+        "Frustrated but civil",
+        "Very angry, strong language"
+      ]
+    },
+    "is_urgent": {
+      "type": "noul",
+      "instructions": "The message conveys urgency or time-sensitivity"
+    }
+  },
+  "cases": [
+    {
+      "id": "t01",
+      "state": "Hi, I've been trying to connect my Stripe account for 3 days and the integration keeps failing. I'm losing sales. Please help ASAP.",
+      "expected": {"department": "technical", "frustration": 1, "is_urgent": true}
+    },
+    {
+      "id": "t02",
+      "state": "Could you send me a copy of last month's invoice? Our accountant needs it for the quarterly close sometime next week.",
+      "expected": {"department": "billing", "frustration": 0, "is_urgent": false}
+    },
+    {
+      "id": "t03",
+      "state": "You charged my card TWICE this month. This is the second time this has happened. Refund me immediately or I'm disputing it with my bank today.",
+      "expected": {"department": "billing", "frustration": 2, "is_urgent": true}
+    },
+    {
+      "id": "t04",
+      "state": "We're a 40-person team evaluating tools for next year. Do you offer volume discounts on the Business plan, and is annual billing available?",
+      "expected": {"department": "sales", "frustration": 0, "is_urgent": false}
+    },
+    {
+      "id": "t05",
+      "state": "The export to CSV button doesn't do anything on Safari. Works fine in Chrome. Not a big deal, just wanted to let you know.",
+      "expected": {"department": "technical", "frustration": 0, "is_urgent": false}
+    },
+    {
+      "id": "t06",
+      "state": "Your API has been returning 500s for the last hour and our entire checkout is down. This is completely unacceptable for a paid product. Fix it NOW.",
+      "expected": {"department": "technical", "frustration": 2, "is_urgent": true}
+    },
+    {
+      "id": "t07",
+      "state": "I canceled my subscription two weeks ago but I was still charged. Kind of annoying, can someone look into it when you get a chance?",
+      "expected": {"department": "billing", "frustration": 1, "is_urgent": false}
+    },
+    {
+      "id": "t08",
+      "state": "Our contract renews Friday and I need a quote for adding 15 more seats before then, otherwise procurement won't approve it this quarter.",
+      "expected": {"department": "sales", "frustration": 0, "is_urgent": true}
+    },
+    {
+      "id": "t09",
+      "state": "Third time asking. The SSO login loops back to the sign-in page every time. I've cleared cookies, tried incognito, nothing works. Getting really tired of this.",
+      "expected": {"department": "technical", "frustration": 1, "is_urgent": false}
+    },
+    {
+      "id": "t10",
+      "state": "What's the difference between the Pro and Business tiers? The pricing page doesn't really explain the API limits.",
+      "expected": {"department": "sales", "frustration": 0, "is_urgent": false}
+    },
+    {
+      "id": "t11",
+      "state": "My payment keeps getting declined at checkout even though the card works everywhere else. I need access restored before my client demo in 2 hours.",
+      "expected": {"department": "billing", "frustration": 1, "is_urgent": true}
+    },
+    {
+      "id": "t12",
+      "state": "This is a joke. Every update breaks something. Now the dashboard won't load at all. I'm telling everyone I know to avoid your garbage product.",
+      "expected": {"department": "technical", "frustration": 2, "is_urgent": false}
+    }
+  ]
+}

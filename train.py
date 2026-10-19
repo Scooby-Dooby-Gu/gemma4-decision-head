@@ -1,6 +1,6 @@
 """Upgrade path: train heads from labelled cases and save them for serve.py.
 
-    python train.py ../jev-vs-local/cases/treasury_ap_routing.json --out heads/
+    python train.py cases/treasury_ap_routing.json --out heads/
 
 The suite format is jev-vs-local's (questions + cases with `expected`). The rung is picked per
 question from labels per option (under 5: stays zero-data; 5 to 49: bias and temperature;
