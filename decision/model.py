@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .head import Head
+from .head import Head, train
 from .schema import BLANK_STATE, build_schema
 
 ABSTAIN_MARGIN = 0.10  # top-1 minus top-2 probability below this sets "abstain": true
@@ -191,7 +191,11 @@ class DecisionModel:
     def fit(self, cases, questions, rung=None, cached=None):
         """Train each question's head on labelled cases (jev-vs-local format). Returns rungs used.
 
-        `cached` can map question key -> (H, y) from `features` to skip the backbone passes."""
+        Each head goes through `head.train`: the rung defaults to the question type's (rung 2
+        for choice, rung 1 otherwise), a held-out fifth of the labels guards against a rung that
+        does worse than a simpler one and calibrates the confidence, and the head is refitted on
+        all labels. `rung` forces the highest rung tried. `cached` can map question key ->
+        (H, y) from `features` to skip the backbone passes."""
         used = {}
         cached = dict(cached or {})
         missing = {k: q for k, q in questions.items() if k not in cached}
@@ -200,8 +204,8 @@ class DecisionModel:
         for key, q in questions.items():
             s = self.schema(key, q)
             H, y = cached[key]
-            head = Head(len(s.options), H[0].shape[-1], self.backbone.softcap)
-            self.heads[(key, s.fingerprint)] = head.fit(s, H, y, rung=rung)
+            head = train(s, H, y, H[0].shape[-1], self.backbone.softcap, rung=rung)
+            self.heads[(key, s.fingerprint)] = head
             used[key] = head.rung
         return used
 
@@ -209,7 +213,7 @@ class DecisionModel:
         folder = Path(folder)
         folder.mkdir(parents=True, exist_ok=True)
         for (key, fp), head in self.heads.items():
-            if head.rung > 0:
+            if head.rung > 0 or head.selection is not None:  # trained, if only its temperature
                 head.save(folder / f"{key}-{fp}.npz", fp)
 
     def load_heads(self, folder):

@@ -35,13 +35,24 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
 
 Labelled cases use the jev-vs-local format (`state` + `expected`). The head that gets trained
 is the zero-data head, so zero-data is its starting point and there is nothing to switch over.
-The rung is picked per question from labels per option:
 
-| Labels per option | Trained | Fixes |
-|---|---|---|
-| under 5 | nothing (zero-data) | |
-| 5 to 49 | per-option bias + temperature | over-picking an option; confidence vs. accuracy |
-| 50 and up | also a per-option correction to `U[handle_k]`, decayed toward zero | options the descriptions alone can't separate |
+| Rung | Trained | Fixes | Default for |
+|---|---|---|---|
+| 0 | nothing (zero-data) | | under 2 labels per option |
+| 1 | per-option bias + temperature | over-picking an option; confidence vs. accuracy | `score`, `noul` |
+| 2 | also a per-option correction read from the unit-length hidden state | options the descriptions alone can't separate | `choice` |
+
+The defaults come from the learning curves below: rung 2 beat rung 1 on every intent suite from
+5 labels per option, and hurt on SST-5's 5-level ratings. `train` (used by `DecisionModel.fit`
+and `train.py`) holds out a fifth of each option's labels as a quiz and fits every rung up to
+the default on the rest. The quiz is a guard: if the default rung's loss there trails a simpler
+rung by more than 0.05 nats, the simpler one is used. It also sets the final temperature, since
+rung 2 tends to be overconfident. The chosen rung is then refitted on all labels.
+
+Rung 2's correction reads `h / |h|`, not `h`. Gemma 4's hidden states are large (`|h|_1` is
+about 5,000), and reading them directly let one optimizer step move a score by ~25, so training
+oscillated, and in 7 of 32 learning-curve settings a run ended mid-spike (as low as 54% where
+the other draws reached 89%). Heads saved before this change are refused at load if they are rung 2.
 
 Heads are keyed by a fingerprint of the question, so editing a question falls back to
 zero-data rather than reusing a stale head.
@@ -126,6 +137,33 @@ level descriptions) or `noul` (a yes/no statement). Two hand-written sample suit
 
 They are small and synthetic: enough to show the zero-data result, too few to both train and
 measure a probe.
+
+## Experiments: how many labels does training need?
+
+`experiments/learning_curves.py` measures the upgrade path on public datasets, which have
+enough labels to train on and a separate test set to score on:
+
+| Suite | Type | Options | Source |
+|---|---|---|---|
+| `clinc_banking`, `clinc_credit_cards`, `clinc_travel` | choice | 15 intents + `out_of_scope` | [CLINC150](https://huggingface.co/datasets/clinc/clinc_oos), one domain each, with its labelled out-of-scope queries |
+| `banking77_g0` to `banking77_g3` | choice | 19 to 20 intents | [Banking77](https://huggingface.co/datasets/PolyAI/banking77), split in four (77 options exceed the ~34 handles) |
+| `sst5` | score | 5 levels | [SST-5](https://huggingface.co/datasets/SetFit/sst5) movie-review sentiment |
+
+For each suite it caches Gemma's hidden states for every case once (the slow part, about
+0.2 s per case), then trains heads on 5, 10, 20, 50 and 100 labels per option, five random
+draws each, at rung 1 and rung 2, and scores them on the test set against the zero-data head.
+CLINC suites also report out-of-scope recall and precision.
+
+```bash
+pip install -r requirements-experiments.txt
+python -m experiments.learning_curves                      # all suites, ~1 h the first time
+python -m experiments.learning_curves --suite sst5 --sizes 0 10 50
+python -m experiments.learning_curves --limit 40           # smoke test
+```
+
+Results go to `results/learning-curves-<time>.json` and a `.md` summary. Option descriptions
+are the intent names in words, so zero-data accuracy is a floor. These datasets are not your
+traffic: they show how the head trains, not how it will do on your cases.
 
 ## Tests
 

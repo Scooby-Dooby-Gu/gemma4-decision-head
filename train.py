@@ -2,9 +2,10 @@
 
     python train.py cases/treasury_ap_routing.json --out heads/
 
-The suite format is jev-vs-local's (questions + cases with `expected`). The rung is picked per
-question from labels per option (under 5: stays zero-data; 5 to 49: bias and temperature;
-50 and up: full probe). Force one with --rung.
+The suite format is jev-vs-local's (questions + cases with `expected`). Each question gets the
+rung for its type (2 for choice, 1 for score and noul), checked against simpler rungs and
+calibrated on a held-out fifth of its labels, then refitted on all of them (see decision/head.py).
+--rung sets the highest rung tried. Questions with under two labels per option stay zero-data.
 """
 
 import argparse
@@ -29,7 +30,15 @@ def main():
     for path in args.suite:
         suite = json.loads(Path(path).read_text())
         used = dm.fit(suite["cases"], suite["questions"], rung=args.rung)
-        print(f"{suite['name']}: " + ", ".join(f"{k} rung {r}" for k, r in used.items()))
+        print(f"{suite['name']}:")
+        for key, q in suite["questions"].items():
+            sel = dm.heads[(key, dm.schema(key, q).fingerprint)].selection
+            if sel is None:
+                print(f"  {key}: zero-data (too few labels to hold out a quiz)")
+                continue
+            quiz = ", ".join(f"rung {r} {v:.3f}" for r, v in sel["quiz_loss"].items())
+            fell = f", fell back from rung {sel['requested']}" if sel["chosen"] < sel["requested"] else ""
+            print(f"  {key}: rung {used[key]}{fell} (quiz of {sel['quiz_size']}, loss {quiz})")
     dm.save_heads(args.out)
     print(f"saved to {args.out}/")
 

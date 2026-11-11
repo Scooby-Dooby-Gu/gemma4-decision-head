@@ -148,34 +148,93 @@ def synthetic_cases(n, seed=0):
     return cases
 
 
-def test_upgrade_rungs_train_and_improve_fit(backbone, tmp_path):
+def test_rungs_fit_their_training_data(backbone):
     dm = DecisionModel(backbone)
-    q = {"department": TRIAGE["department"]}
-    cases = synthetic_cases(180)
-    H, y = dm.features(cases, "department", q["department"])
-    s = dm.schema("department", q["department"])
-
-    def nll(head, n=len(y)):
-        p = head.predict(s, [h[:n] for h in H])
-        return -np.log(p[np.arange(n), y[:n]] + 1e-12).mean()
-
+    q = TRIAGE["department"]
+    H, y = dm.features(synthetic_cases(90), "department", q)
+    s = dm.schema("department", q)
     zero = dm.heads[("department", s.fingerprint)]
-    assert dm.fit(cases[:6], q, cached={"department": ([h[:6] for h in H], y[:6])}) == {"department": 0}
-    assert dm.fit(cases[:30], q, cached={"department": ([h[:30] for h in H], y[:30])}) == {"department": 1}
-    rung1 = dm.heads[("department", s.fingerprint)]
-    assert dm.fit(cases, q, cached={"department": (H, y)}) == {"department": 2}
-    rung2 = dm.heads[("department", s.fingerprint)]
-    # Each rung fits its own training cases at least as well as the rung below it does.
-    assert nll(rung1, 30) <= nll(zero, 30) + 1e-6
-    assert nll(rung2) < nll(rung1) and nll(rung2) <= nll(zero)
+    rung1 = Head(len(s.options), H[0].shape[-1], backbone.softcap).fit(s, H, y, rung=1)
+    rung2 = Head(len(s.options), H[0].shape[-1], backbone.softcap).fit(s, H, y, rung=2)
+    assert rung2.nll(s, H, y) < rung1.nll(s, H, y) <= zero.nll(s, H, y) + 1e-6
+
+
+def test_correction_reads_the_unit_length_hidden_state():
+    """Rung 2's term must not grow with |h|: Gemma 4's hidden states are large (|h|_1 ~ 5,000),
+    and reading h directly made each optimizer step move logits by up to ~25."""
+    rng = np.random.default_rng(0)
+    head = Head(3, 8)
+    head.params["delta"] = mx.array(rng.normal(size=(3, 8)).astype(np.float32))
+    rows, mask = mx.array(rng.normal(size=(3, 1, 8)).astype(np.float32)), mx.ones((3, 1), dtype=mx.bool_)
+    h = mx.array(rng.normal(size=(2, 8)).astype(np.float32))
+    zero = dict(head.params, delta=mx.zeros((3, 8)))
+    term = lambda x: np.array(head._view_logits(head.params, x, rows, mask) - head._view_logits(zero, x, rows, mask))
+    np.testing.assert_allclose(term(h), term(h * 100), rtol=1e-4, atol=1e-4)
+
+
+def test_calibrate_lowers_the_loss_without_changing_answers(backbone):
+    dm = DecisionModel(backbone)
+    q = TRIAGE["department"]
+    H, y = dm.features(synthetic_cases(60), "department", q)
+    s = dm.schema("department", q)
+    head = Head(len(s.options), H[0].shape[-1], backbone.softcap).fit(s, [h[:30] for h in H], y[:30], rung=2)
+    before, top = head.nll(s, [h[30:] for h in H], y[30:]), head.predict(s, H).argmax(1)
+    after = head.calibrate(s, [h[30:] for h in H], y[30:])
+    assert after <= before + 1e-6
+    assert after == pytest.approx(head.nll(s, [h[30:] for h in H], y[30:]), abs=1e-4)
+    np.testing.assert_array_equal(head.predict(s, H).argmax(1), top)
+
+
+def test_guard_keeps_the_requested_rung_unless_a_simpler_one_is_clearly_better():
+    from decision.head import GUARD, choose
+
+    assert choose({0: 1.0, 1: 0.8, 2: 0.6}, 2) == 2
+    assert choose({0: 1.0, 1: 0.8, 2: 0.8 + GUARD / 2}, 2) == 2  # within the margin: keep it
+    assert choose({0: 1.0, 1: 0.8, 2: 0.8 + GUARD * 2}, 2) == 1
+    assert choose({0: 0.5, 1: 0.8, 2: 0.9}, 2) == 0              # both trained rungs trail zero-data
+    assert choose({0: 0.5, 1: 0.9}, 1) == 0
+
+
+def test_train_picks_the_rung_for_the_question_type_and_saves_it(backbone, tmp_path):
+    dm = DecisionModel(backbone)
+    questions = {"department": TRIAGE["department"], "frustration": TRIAGE["frustration"]}
+    cases = synthetic_cases(90)
+    for i, c in enumerate(cases):
+        c["expected"]["frustration"] = i % 3
+    used = dm.fit(cases, questions)
+    sel = {k: dm.heads[(k, dm.schema(k, q).fingerprint)].selection for k, q in questions.items()}
+    assert sel["department"]["requested"] == 2 and sel["frustration"]["requested"] == 1
+    assert used["department"] == sel["department"]["chosen"] and sel["department"]["quiz_size"] == 18
+    assert set(sel["department"]["quiz_loss"]) == {0, 1, 2}
 
     dm.save_heads(tmp_path)
     fresh = DecisionModel(backbone)
     fresh.load_heads(tmp_path)
-    fresh.schema("department", q["department"])
-    loaded = fresh.heads[("department", s.fingerprint)]
-    assert loaded.rung == 2
-    np.testing.assert_allclose(loaded.predict(s, H), rung2.predict(s, H), atol=1e-5)
+    H, _ = dm.features(cases, "department", questions["department"])
+    s = fresh.schema("department", questions["department"])
+    np.testing.assert_allclose(fresh.heads[("department", s.fingerprint)].predict(s, H),
+                               dm.heads[("department", s.fingerprint)].predict(s, H), atol=1e-5)
+
+
+def test_too_few_labels_stay_zero_data(backbone):
+    dm = DecisionModel(backbone)
+    q = {"department": TRIAGE["department"]}
+    cases = synthetic_cases(3)  # one per option: nothing to hold out
+    assert dm.fit(cases, q) == {"department": 0}
+    s = dm.schema("department", q["department"])
+    assert dm.heads[("department", s.fingerprint)].selection is None
+
+
+def test_old_format_rung2_heads_are_refused(tmp_path):
+    head = Head(3, 8)
+    head.rung = 2
+    head.save(tmp_path / "x.npz", "fp")
+    d = dict(np.load(tmp_path / "x.npz"))
+    d.pop("format")
+    np.savez(tmp_path / "old.npz", **d)
+    with pytest.raises(ValueError, match="older format"):
+        Head.load(tmp_path / "old.npz", "fp")
+    assert Head.load(tmp_path / "x.npz", "fp").rung == 2
 
 
 def test_trained_head_is_ignored_when_the_question_changes(backbone, tmp_path):

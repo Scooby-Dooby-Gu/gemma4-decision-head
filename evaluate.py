@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from decision import DecisionModel
-from decision.head import Head
+from decision.head import train as train_head
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_CASES = HERE / "cases"
@@ -55,7 +55,7 @@ def kfold(dm, s, H, y, folds, seed=0):
     for f in range(folds):
         test = idx[f::folds]
         train = np.setdiff1d(idx, test)
-        head = Head(len(s.options), H[0].shape[-1], dm.backbone.softcap).fit(s, [h[train] for h in H], y[train])
+        head = train_head(s, [h[train] for h in H], y[train], H[0].shape[-1], dm.backbone.softcap, seed=seed)
         rungs.append(head.rung)
         out[test] = head.predict(s, [h[test] for h in H])
     return out, rungs
