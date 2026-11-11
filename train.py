@@ -38,6 +38,8 @@ def main():
                 continue
             quiz = ", ".join(f"rung {r} {v:.3f}" for r, v in sel["quiz_loss"].items())
             fell = f", fell back from rung {sel['requested']}" if sel["chosen"] < sel["requested"] else ""
+            if not sel["guarded"]:
+                fell += ", guard off: under 2 quiz labels per option"
             print(f"  {key}: rung {used[key]}{fell} (quiz of {sel['quiz_size']}, loss {quiz})")
     dm.save_heads(args.out)
     print(f"saved to {args.out}/")
