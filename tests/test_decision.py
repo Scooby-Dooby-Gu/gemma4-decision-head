@@ -216,6 +216,22 @@ def test_train_picks_the_rung_for_the_question_type_and_saves_it(backbone, tmp_p
                                dm.heads[("department", s.fingerprint)].predict(s, H), atol=1e-5)
 
 
+def test_guard_waits_for_two_quiz_labels_per_option(backbone):
+    """With one quiz label per option the guard misfired on real data, so it must not act; the
+    requested rung is kept and the quiz only calibrates. From two per option it acts again."""
+    dm = DecisionModel(backbone)
+    q = {"department": TRIAGE["department"]}
+    s = dm.schema("department", q["department"])
+    for n_cases, guarded in [(15, False), (30, True)]:  # 5 and 10 labels per option
+        cases = synthetic_cases(n_cases)
+        dm.fit(cases, q)
+        sel = dm.heads[("department", s.fingerprint)].selection
+        assert sel["guarded"] is guarded
+        assert set(sel["quiz_loss"]) == ({0, 1, 2} if guarded else {2})
+        if not guarded:
+            assert sel["chosen"] == sel["requested"] == 2
+
+
 def test_too_few_labels_stay_zero_data(backbone):
     dm = DecisionModel(backbone)
     q = {"department": TRIAGE["department"]}

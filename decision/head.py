@@ -24,8 +24,8 @@ step 350, 54% at step 400). On h_hat one step moves a logit by at most lr x sqrt
 rung 1 for `score` and `noul`), as measured on public datasets (see README, Experiments). It
 holds out a fifth of each option's labels as a quiz and fits the rungs on the rest. The quiz
 then does two jobs: it is a guard (a rung that scores clearly worse on it than a simpler rung
-is replaced by that rung) and it sets the final temperature, since rung 2 tends to be
-overconfident. The chosen rung is then refitted on all the labels. Early stopping on the quiz
+is replaced by that rung, once the quiz has two labels per option) and it sets the final
+temperature, since rung 2 tends to be overconfident. The chosen rung is then refitted on all the labels. Early stopping on the quiz
 was tried and dropped: held-out loss turns up after 10 to 40 steps while accuracy keeps
 improving to ~400, so it stopped too soon (Banking77 g1, 20 labels per option: 92.3% vs 94.2%).
 Picking the rung by quiz score alone was also dropped: with a few labels per option the quiz
@@ -50,6 +50,7 @@ DELTA_DECAY = 0.0
 DEFAULT_RUNG = {"choice": 2, "score": 1, "noul": 1}
 VAL_FRACTION = 0.2   # share of each option's labels held out as the quiz
 GUARD = 0.05         # quiz loss (nats) by which a rung may trail a simpler one before it is dropped
+GUARD_MIN_QUIZ = 2   # quiz labels needed for every option before the guard may drop a rung
 
 class Head:
     def __init__(self, n_options, hidden_size, softcap=None, alpha=ALPHA):
@@ -203,8 +204,12 @@ def train(schema, H, y, hidden_size, softcap, rung=None, seed=0):
     `rung` defaults to DEFAULT_RUNG for the question type. A fifth of each option's labels is
     held out; every rung up to the requested one is fitted on the rest and scored on the quiz
     after calibrating its temperature there. The requested rung is kept unless it trails the
-    best simpler rung by more than GUARD, in which case the next rung down is tried. The kept
-    rung is refitted on all labels and given the temperature correction its quiz run found.
+    best simpler rung by more than GUARD, in which case the next rung down is tried. The guard
+    only acts when every option has GUARD_MIN_QUIZ quiz labels (about 10 labels per option):
+    with one quiz label per option it fell back wrongly often enough to cost 1 to 2 points at
+    5 labels per option, so below that the requested rung is kept and the quiz only calibrates.
+    The kept rung is refitted on all labels and given the temperature correction its quiz run
+    found.
     With under two labels per option on average there is no quiz, and the zero-data head is
     returned."""
     y = np.asarray(y)
@@ -216,15 +221,17 @@ def train(schema, H, y, hidden_size, softcap, rung=None, seed=0):
         head.n_labels = int(len(y))
         return head
     Htr, Hva = [h[tr] for h in H], [h[va] for h in H]
+    guarded = int(np.bincount(y[va], minlength=len(schema.options))[np.unique(y)].min()) >= GUARD_MIN_QUIZ
     quiz, temp = {}, {}
-    for r in range(rung + 1):
+    for r in (range(rung + 1) if guarded else [rung]):
         h = new().fit(schema, Htr, y[tr], rung=r)
         before = float(h.params["log_t"])
         quiz[r] = h.calibrate(schema, Hva, y[va])
         temp[r] = float(h.params["log_t"]) - before
-    chosen = choose(quiz, rung)
+    chosen = choose(quiz, rung) if guarded else rung
     final = new().fit(schema, H, y, rung=chosen) if chosen else new()
     final.params["log_t"] = final.params["log_t"] + temp[chosen]
     final.rung, final.n_labels = chosen, int(len(y))
-    final.selection = {"requested": rung, "chosen": chosen, "quiz_loss": quiz, "quiz_size": int(len(va))}
+    final.selection = {"requested": rung, "chosen": chosen, "guarded": guarded, "quiz_loss": quiz,
+                       "quiz_size": int(len(va))}
     return final

@@ -46,7 +46,8 @@ The defaults come from the learning curves below: rung 2 beat rung 1 on every in
 5 labels per option, and hurt on SST-5's 5-level ratings. `train` (used by `DecisionModel.fit`
 and `train.py`) holds out a fifth of each option's labels as a quiz and fits every rung up to
 the default on the rest. The quiz is a guard: if the default rung's loss there trails a simpler
-rung by more than 0.05 nats, the simpler one is used. It also sets the final temperature, since
+rung by more than 0.05 nats, the simpler one is used. The guard needs two quiz labels per option
+(about 10 labels per option); with fewer it misfired, so the default rung is kept. It also sets the final temperature, since
 rung 2 tends to be overconfident. The chosen rung is then refitted on all labels.
 
 Rung 2's correction reads `h / |h|`, not `h`. Gemma 4's hidden states are large (`|h|_1` is
