@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from decision import DecisionModel, build_schema  # noqa: E402
 from decision.backbone import GemmaBackbone  # noqa: E402
 from decision.head import Head  # noqa: E402
-from decision.schema import ANSWER_PREFIX  # noqa: E402
+from decision.schema import ANSWER_PREFIX, SCORE_ANSWER_PREFIX  # noqa: E402
 
 
 class WordTokenizer:
@@ -87,7 +87,8 @@ def test_zero_data_head_equals_gemma_logits(backbone):
     dm = DecisionModel(backbone, debias_order=False)
     s = dm.schema("department", TRIAGE["department"])
     view = s.views[0]
-    ids = backbone.tokenize_chat(view.prompt("I was charged twice"), ANSWER_PREFIX)
+    pre, tail = dm.prompt_ids(view, "I was charged twice")
+    ids = pre + tail
     h, _ = backbone.encode(ids)
     full = backbone.logits(ids)
     head = Head(len(s.options), h.shape[-1], backbone.softcap)
@@ -154,9 +155,9 @@ def test_upgrade_rungs_train_and_improve_fit(backbone, tmp_path):
     H, y = dm.features(cases, "department", q["department"])
     s = dm.schema("department", q["department"])
 
-    def nll(head):
-        p = head.predict(s, H)
-        return -np.log(p[np.arange(len(y)), y] + 1e-12).mean()
+    def nll(head, n=len(y)):
+        p = head.predict(s, [h[:n] for h in H])
+        return -np.log(p[np.arange(n), y[:n]] + 1e-12).mean()
 
     zero = dm.heads[("department", s.fingerprint)]
     assert dm.fit(cases[:6], q, cached={"department": ([h[:6] for h in H], y[:6])}) == {"department": 0}
@@ -164,7 +165,9 @@ def test_upgrade_rungs_train_and_improve_fit(backbone, tmp_path):
     rung1 = dm.heads[("department", s.fingerprint)]
     assert dm.fit(cases, q, cached={"department": (H, y)}) == {"department": 2}
     rung2 = dm.heads[("department", s.fingerprint)]
-    assert nll(rung2) < nll(rung1) <= nll(zero) + 1e-6
+    # Each rung fits its own training cases at least as well as the rung below it does.
+    assert nll(rung1, 30) <= nll(zero, 30) + 1e-6
+    assert nll(rung2) < nll(rung1) and nll(rung2) <= nll(zero)
 
     dm.save_heads(tmp_path)
     fresh = DecisionModel(backbone)
@@ -186,3 +189,94 @@ def test_trained_head_is_ignored_when_the_question_changes(backbone, tmp_path):
     fresh.load_heads(tmp_path)
     s = fresh.schema("department", edited)
     assert fresh.heads[("department", s.fingerprint)].rung == 0
+
+
+def test_score_prefix_ends_with_a_space_so_the_digit_is_the_next_token():
+    """Gemma writes " 1" as a space then a digit, so after a bare "Answer:" it wants a space and the
+    digits get almost no probability (0.3% on the real model). Score views must end on the space."""
+    views = {k: build_schema(k, q).views for k, q in TRIAGE.items()}
+    assert all(v.answer_prefix == SCORE_ANSWER_PREFIX == ANSWER_PREFIX + " " for v in views["frustration"])
+    # Letters and Yes/No are single " B" / " Yes" tokens, so they keep the bare prefix.
+    assert all(v.answer_prefix == ANSWER_PREFIX for v in views["department"] + views["is_urgent"])
+
+
+def test_handle_mass_is_the_softmax_share_of_the_handle_tokens(backbone):
+    dm = DecisionModel(backbone, debias_order=False)
+    s = dm.schema("frustration", TRIAGE["frustration"])
+    view = s.views[0]
+    (mass,) = dm.handle_mass(s, "Why is this still broken")
+    z = backbone.logits(sum(dm.prompt_ids(view, "Why is this still broken"), []))
+    p = np.exp(z - z.max()) / np.exp(z - z.max()).sum()
+    toks = sorted({t for hd in view.handles for t in backbone.single_token_ids(hd)})
+    assert 0 <= mass <= 1 and mass == pytest.approx(p[toks].sum(), abs=1e-5)
+
+
+def test_fingerprint_changes_with_the_prompt_setup():
+    """A head is fitted to the prompt template and the views, so changing either must not reuse it."""
+    import decision.schema as schema
+
+    q = TRIAGE["department"]
+    both, listed = build_schema("d", q).fingerprint, build_schema("d", q, debias_order=False).fingerprint
+    assert both != listed
+    old = schema.TEMPLATE_VERSION
+    try:
+        schema.TEMPLATE_VERSION = old + 1
+        assert build_schema("d", q).fingerprint != both
+    finally:
+        schema.TEMPLATE_VERSION = old
+
+
+LONG_STATE = " ".join(["The invoice from last month still shows the old plan and"] * 12) + " please fix it today"
+
+
+@pytest.mark.parametrize("state_first", [False, True])
+@pytest.mark.parametrize("state", ["Charged twice, fix it!", LONG_STATE])
+def test_cached_prefix_gives_the_same_hidden_states_as_full_passes(backbone, state, state_first):
+    """A cached prefix plus the rest must equal a full pass per view, in both layouts. LONG_STATE is
+    longer than the tiny model's 64-token sliding window, so the rotating cache wraps too."""
+    cached = DecisionModel(backbone, state_first=state_first)
+    full = DecisionModel(backbone, state_first=state_first, use_cache=False)
+    assert len(backbone.tokenize_chat(LONG_STATE)) > 64
+    sc = {k: cached.schema(k, q) for k, q in TRIAGE.items()}
+    sf = {k: full.schema(k, q) for k, q in TRIAGE.items()}
+    a, b = cached.featurize_all(state, sc), full.featurize_all(state, sf)
+    for key in TRIAGE:
+        assert len(a[key]) == len(sc[key].views)
+        for ha, hb in zip(a[key], b[key]):
+            np.testing.assert_allclose(ha, hb, atol=2e-3, rtol=2e-3)
+    # The shared prefix is copied, not modified: answering again gives the same result.
+    again = cached.featurize_all(state, sc)
+    for key in TRIAGE:
+        for ha, hc in zip(a[key], again[key]):
+            np.testing.assert_array_equal(ha, hc)
+    assert cached.answer(state, TRIAGE).keys() == TRIAGE.keys()
+
+
+def test_state_first_shares_one_prefix_across_questions(backbone):
+    dm = DecisionModel(backbone, state_first=True)
+    prefixes = {tuple(dm.prompt_ids(v, "Refund please")[0])
+                for k, q in TRIAGE.items() for v in dm.schema(k, q).views}
+    assert len(prefixes) == 1 and len(prefixes.pop()) > 0
+
+
+def test_question_first_shares_each_view_prefix_across_cases(backbone):
+    dm = DecisionModel(backbone)
+    for k, q in TRIAGE.items():
+        for v in dm.schema(k, q).views:
+            a, b = dm.prompt_ids(v, "Refund please"), dm.prompt_ids(v, "The app crashes on login")
+            assert a[0] == b[0] and a[1] != b[1]
+
+
+def test_default_prompts_are_the_original_question_first_ones(backbone):
+    """The default layout is the original one; state_first is opt-in and changes the fingerprint."""
+    q = TRIAGE["is_urgent"]
+    (v,) = build_schema("u", q).views
+    assert v.prompt("Hi") == ("Statement: The message conveys urgency.\n\nInput:\nHi\n\n"
+                              "Is the statement true for this input? Reply with only Yes or No.")
+    # The cached split is the same text. (On Gemma's real tokenizer the two pieces also tokenize
+    # exactly like the whole prompt, checked on all 186 sample-suite prompts; this test's word
+    # tokenizer glues newlines to the next word, so token ids are not compared here.)
+    assert "".join(v.split("Hi")) == v.prompt("Hi") and v.split("Hi")[0].endswith("Input:\n")
+    (w,) = build_schema("u", q, state_first=True).views
+    assert w.prompt("Hi").startswith("Input:\nHi\n\nStatement:")
+    assert build_schema("u", q).fingerprint != build_schema("u", q, state_first=True).fingerprint

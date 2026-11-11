@@ -20,10 +20,12 @@ def main():
     ap.add_argument("suite", nargs="+")
     ap.add_argument("--out", default="heads")
     ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--state-first", action="store_true",
+                    help="state before the question; must match how the heads were trained")
     ap.add_argument("--rung", type=int, choices=[0, 1, 2])
     args = ap.parse_args()
 
-    dm = DecisionModel(GemmaBackbone(args.model))
+    dm = DecisionModel(GemmaBackbone(args.model), state_first=args.state_first)
     for path in args.suite:
         suite = json.loads(Path(path).read_text())
         used = dm.fit(suite["cases"], suite["questions"], rung=args.rung)

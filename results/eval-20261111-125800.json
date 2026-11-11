@@ -1,0 +1,731 @@
+{
+  "timestamp": "2026-11-11T12:57:31",
+  "model": "mlx-community/gemma-4-e4b-it-4bit",
+  "debias_order": true,
+  "state_first": false,
+  "prefix_cache": true,
+  "suites": {
+    "support_triage": {
+      "ms_per_case": 536.459742996764,
+      "department": {
+        "zero_data": {
+          "accuracy": 1.0,
+          "ece": 0.003228902816772461,
+          "brier": 0.0002047116763595874,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 1.0,
+          "handle_mass": 0.9519163608551026
+        },
+        "predictions": [
+          {
+            "id": "t01",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999926090240479
+          },
+          {
+            "id": "t02",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9999068975448608
+          },
+          {
+            "id": "t03",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9986838698387146
+          },
+          {
+            "id": "t04",
+            "expected": "sales",
+            "got": "sales",
+            "confidence": 0.9994786977767944
+          },
+          {
+            "id": "t05",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999676942825317
+          },
+          {
+            "id": "t06",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999942183494568
+          },
+          {
+            "id": "t07",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9994667172431946
+          },
+          {
+            "id": "t08",
+            "expected": "sales",
+            "got": "sales",
+            "confidence": 0.9998703598976135
+          },
+          {
+            "id": "t09",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999915361404419
+          },
+          {
+            "id": "t10",
+            "expected": "sales",
+            "got": "sales",
+            "confidence": 0.998930037021637
+          },
+          {
+            "id": "t11",
+            "expected": "billing",
+            "got": "billing",
+            "confidence": 0.9649860858917236
+          },
+          {
+            "id": "t12",
+            "expected": "technical",
+            "got": "technical",
+            "confidence": 0.9999845027923584
+          }
+        ],
+        "kfold": {
+          "accuracy": 1.0,
+          "ece": 0.0032288978497186926,
+          "brier": 0.0002047116763595874,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 1.0,
+          "rungs": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "frustration": {
+        "zero_data": {
+          "accuracy": 0.75,
+          "ece": 0.155141939719518,
+          "brier": 0.3006802409619843,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.75,
+          "handle_mass": 0.9999324202537536
+        },
+        "predictions": [
+          {
+            "id": "t01",
+            "expected": 1,
+            "got": "1",
+            "confidence": 0.7621334791183472
+          },
+          {
+            "id": "t02",
+            "expected": 0,
+            "got": "0",
+            "confidence": 0.996163547039032
+          },
+          {
+            "id": "t03",
+            "expected": 2,
+            "got": "2",
+            "confidence": 0.9950574636459351
+          },
+          {
+            "id": "t04",
+            "expected": 0,
+            "got": "0",
+            "confidence": 0.9920420050621033
+          },
+          {
+            "id": "t05",
+            "expected": 0,
+            "got": "1",
+            "confidence": 0.5980285406112671
+          },
+          {
+            "id": "t06",
+            "expected": 2,
+            "got": "2",
+            "confidence": 0.9997761249542236
+          },
+          {
+            "id": "t07",
+            "expected": 1,
+            "got": "1",
+            "confidence": 0.9753302335739136
+          },
+          {
+            "id": "t08",
+            "expected": 0,
+            "got": "0",
+            "confidence": 0.5888527035713196
+          },
+          {
+            "id": "t09",
+            "expected": 1,
+            "got": "2",
+            "confidence": 0.5767955183982849
+          },
+          {
+            "id": "t10",
+            "expected": 0,
+            "got": "1",
+            "confidence": 0.9382081627845764
+          },
+          {
+            "id": "t11",
+            "expected": 1,
+            "got": "1",
+            "confidence": 0.9636095762252808
+          },
+          {
+            "id": "t12",
+            "expected": 2,
+            "got": "2",
+            "confidence": 0.9999727010726929
+          }
+        ],
+        "kfold": {
+          "accuracy": 0.75,
+          "ece": 0.15514192481835684,
+          "brier": 0.3006802409619843,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.75,
+          "rungs": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "is_urgent": {
+        "zero_data": {
+          "accuracy": 0.9166666666666666,
+          "ece": 0.09067963063716891,
+          "brier": 0.16662146848586465,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.9166666666666666,
+          "handle_mass": 0.9890513062477112
+        },
+        "predictions": [
+          {
+            "id": "t01",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999988079071045
+          },
+          {
+            "id": "t02",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.8744946122169495
+          },
+          {
+            "id": "t03",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999991059303284
+          },
+          {
+            "id": "t04",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9977517127990723
+          },
+          {
+            "id": "t05",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9972803592681885
+          },
+          {
+            "id": "t06",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999963641166687
+          },
+          {
+            "id": "t07",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9839339852333069
+          },
+          {
+            "id": "t08",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999985098838806
+          },
+          {
+            "id": "t09",
+            "expected": false,
+            "got": "true",
+            "confidence": 0.9917961955070496
+          },
+          {
+            "id": "t10",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9932848811149597
+          },
+          {
+            "id": "t11",
+            "expected": true,
+            "got": "true",
+            "confidence": 0.9999988079071045
+          },
+          {
+            "id": "t12",
+            "expected": false,
+            "got": "false",
+            "confidence": 0.9986109733581543
+          }
+        ],
+        "kfold": {
+          "accuracy": 0.9166666666666666,
+          "ece": 0.09243294596672055,
+          "brier": 0.16657637391223037,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.9166666666666666,
+          "rungs": [
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    "treasury_ap_routing": {
+      "ms_per_case": 187.44726325773323,
+      "agent": {
+        "zero_data": {
+          "accuracy": 0.8787878787878788,
+          "ece": 0.09617251880241162,
+          "brier": 0.20101163444663783,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.8787878787878788,
+          "handle_mass": 0.9709076046943664
+        },
+        "predictions": [
+          {
+            "id": "p01",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9997256398200989
+          },
+          {
+            "id": "p02",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9942654967308044
+          },
+          {
+            "id": "p03",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.971724271774292
+          },
+          {
+            "id": "p04",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9978446364402771
+          },
+          {
+            "id": "p05",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9975470900535583
+          },
+          {
+            "id": "p06",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9948577880859375
+          },
+          {
+            "id": "p07",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9949623346328735
+          },
+          {
+            "id": "p08",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9983881711959839
+          },
+          {
+            "id": "p09",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9987497329711914
+          },
+          {
+            "id": "p10",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.99791020154953
+          },
+          {
+            "id": "p11",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.9805864691734314
+          },
+          {
+            "id": "p12",
+            "expected": "payment_search",
+            "got": "payment_search",
+            "confidence": 0.998685896396637
+          },
+          {
+            "id": "r01",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999678134918213
+          },
+          {
+            "id": "r02",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999708533287048
+          },
+          {
+            "id": "r03",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999642968177795
+          },
+          {
+            "id": "r04",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.999920129776001
+          },
+          {
+            "id": "r05",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.999879002571106
+          },
+          {
+            "id": "r06",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9995693564414978
+          },
+          {
+            "id": "r07",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9998202323913574
+          },
+          {
+            "id": "r08",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999430179595947
+          },
+          {
+            "id": "r09",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.999937891960144
+          },
+          {
+            "id": "r10",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9997729063034058
+          },
+          {
+            "id": "r11",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9999580383300781
+          },
+          {
+            "id": "r12",
+            "expected": "reconciliation_report",
+            "got": "reconciliation_report",
+            "confidence": 0.9997673630714417
+          },
+          {
+            "id": "e01",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999805092811584
+          },
+          {
+            "id": "e02",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999646544456482
+          },
+          {
+            "id": "e03",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9996978640556335
+          },
+          {
+            "id": "e04",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.99996018409729
+          },
+          {
+            "id": "e05",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999694228172302
+          },
+          {
+            "id": "e06",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999287128448486
+          },
+          {
+            "id": "e07",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999475479125977
+          },
+          {
+            "id": "e08",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9996998906135559
+          },
+          {
+            "id": "e09",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9998533725738525
+          },
+          {
+            "id": "e10",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999608397483826
+          },
+          {
+            "id": "e11",
+            "expected": "entitlements",
+            "got": "entitlements",
+            "confidence": 0.9999499320983887
+          },
+          {
+            "id": "e12",
+            "expected": "entitlements",
+            "got": "reconciliation_report",
+            "confidence": 0.913314163684845
+          },
+          {
+            "id": "b01",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.999925971031189
+          },
+          {
+            "id": "b02",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.999950110912323
+          },
+          {
+            "id": "b03",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9998880624771118
+          },
+          {
+            "id": "b04",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9996750950813293
+          },
+          {
+            "id": "b05",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9999691843986511
+          },
+          {
+            "id": "b06",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9999465346336365
+          },
+          {
+            "id": "b07",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9996329545974731
+          },
+          {
+            "id": "b08",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9955894351005554
+          },
+          {
+            "id": "b09",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9980505704879761
+          },
+          {
+            "id": "b10",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9990222454071045
+          },
+          {
+            "id": "b11",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9994268417358398
+          },
+          {
+            "id": "b12",
+            "expected": "balance_liquidity",
+            "got": "balance_liquidity",
+            "confidence": 0.9993310570716858
+          },
+          {
+            "id": "f01",
+            "expected": "faq",
+            "got": "out_of_scope",
+            "confidence": 0.7171081900596619
+          },
+          {
+            "id": "f02",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9976676106452942
+          },
+          {
+            "id": "f03",
+            "expected": "faq",
+            "got": "payment_search",
+            "confidence": 0.9983792304992676
+          },
+          {
+            "id": "f04",
+            "expected": "faq",
+            "got": "entitlements",
+            "confidence": 0.9998567700386047
+          },
+          {
+            "id": "f05",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.8189268708229065
+          },
+          {
+            "id": "f06",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9980438351631165
+          },
+          {
+            "id": "f07",
+            "expected": "faq",
+            "got": "payment_search",
+            "confidence": 0.7250680327415466
+          },
+          {
+            "id": "f08",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9641243815422058
+          },
+          {
+            "id": "f09",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9899504780769348
+          },
+          {
+            "id": "f10",
+            "expected": "faq",
+            "got": "payment_search",
+            "confidence": 0.7890226244926453
+          },
+          {
+            "id": "f11",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.9893712401390076
+          },
+          {
+            "id": "f12",
+            "expected": "faq",
+            "got": "faq",
+            "confidence": 0.982363760471344
+          },
+          {
+            "id": "o01",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.753705620765686
+          },
+          {
+            "id": "o02",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.9514992237091064
+          },
+          {
+            "id": "o03",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.9974023699760437
+          },
+          {
+            "id": "o04",
+            "expected": "out_of_scope",
+            "got": "faq",
+            "confidence": 0.893583357334137
+          },
+          {
+            "id": "o05",
+            "expected": "out_of_scope",
+            "got": "out_of_scope",
+            "confidence": 0.9718064069747925
+          },
+          {
+            "id": "o06",
+            "expected": "out_of_scope",
+            "got": "payment_search",
+            "confidence": 0.983153760433197
+          }
+        ],
+        "kfold": {
+          "accuracy": 0.9090909090909091,
+          "ece": 0.05225470842737141,
+          "brier": 0.16363240042621124,
+          "abstain_rate": 0.0,
+          "accuracy_when_answering": 0.9090909090909091,
+          "rungs": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    }
+  }
+}
