@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from .head import Head
-from .schema import ANSWER_PREFIX, BLANK_STATE, build_schema
+from .schema import BLANK_STATE, build_schema
 
 ABSTAIN_MARGIN = 0.10  # top-1 minus top-2 probability below this sets "abstain": true
 
@@ -67,9 +67,26 @@ class DecisionModel:
         """One forward pass per view; returns a list over views of the last hidden state (D,)."""
         out = []
         for view in schema.views:
-            ids = self.backbone.tokenize_chat(view.prompt(state), ANSWER_PREFIX)
-            last, _ = self.backbone.encode(ids)
+            last, _ = self.backbone.encode(self.prompt_ids(view, state))
             out.append(last)
+        return out
+
+    def prompt_ids(self, view, state):
+        return self.backbone.tokenize_chat(view.prompt(state), view.answer_prefix)
+
+    def handle_mass(self, schema, state):
+        """Share of Gemma's full next-token probability that lands on the answer handles, per view.
+
+        The head only compares the handles with each other, so it gives confident-looking answers
+        even when Gemma wants to write something else entirely. A low share (well under 0.5) means
+        the prompt does not lead Gemma to answer with a handle, and the probabilities are noise.
+        Costs a full-vocabulary pass per view, so it is a diagnostic, not part of answering."""
+        out = []
+        for view in schema.views:
+            z = self.backbone.logits(self.prompt_ids(view, state))
+            p = np.exp(z - z.max())
+            toks = sorted({t for hd in view.handles for t in self.backbone.single_token_ids(hd)})
+            out.append(float(p[toks].sum() / p.sum()))
         return out
 
     def embed(self, text):

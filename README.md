@@ -11,7 +11,9 @@ Design doc: [docs/DESIGN.md](docs/DESIGN.md)
 ## How it decides
 
 1. The question becomes a prompt: task, options under short handles (letters for `choice`,
-   level digits for `score`, Yes/No for `noul`), then the state, then `Answer:`.
+   level digits for `score`, Yes/No for `noul`), then the state, then `Answer:`. For `score`
+   it is `Answer: ` with a trailing space: Gemma writes " 1" as a space then a digit, so
+   without the space it puts almost no probability on the digits.
 2. Gemma runs one forward pass. The final-layer hidden state `h` at the last position (after
    the final norm) is the pooled representation the head reads.
 3. Head: `logit_k = softcap(U[handle_k] . h)`, where `U` is Gemma's own output embedding. With
@@ -57,7 +59,7 @@ pip install -r requirements.txt
 `--suite` to point at others.
 
 ```bash
-# Zero-data accuracy, ECE, Brier and abstain rate on every suite
+# Zero-data accuracy, ECE, Brier, abstain rate and handle mass on every suite
 python evaluate.py
 python evaluate.py --folds 5     # plus k-fold scores for the upgrade head
 python evaluate.py --no-debias   # listed order only, to measure order bias
@@ -77,9 +79,15 @@ dm.fit(cases, questions)                  # optional
 dm.save_heads("heads/")
 ```
 
-Results go to `results/`. The committed `results/eval-20261018-200307.json` is a zero-data run
-with `--folds` on the real 4-bit E4B weights (support triage, 12 cases: department 100%,
-urgency 91.7%, frustration 66.7%; treasury AP routing, 66 cases: 87.9%).
+Handle mass is the share of Gemma's own next-token probability that lands on the valid answer
+handles. The head only compares handles with each other, so it looks confident even when Gemma
+wants to write something else; `evaluate.py` warns when the share is under 50%.
+
+Results go to `results/`. `results/eval-20261111-124057.json` is a zero-data run with
+`--folds 5` on the real 4-bit E4B weights (support triage, 12 cases: department 100%, urgency
+91.7%, frustration 75.0%; treasury AP routing, 66 cases: 87.9%, 90.9% with a trained head).
+The earlier `results/eval-20261018-200307.json` predates the score-prefix fix (frustration
+66.7%, with handle mass 0.003).
 
 ### Data
 
@@ -105,9 +113,10 @@ pip install pytest
 python -m pytest tests -q
 ```
 
-It checks that the zero-data head equals Gemma's own logits, that answers have Jev's shape,
+It checks that the zero-data head equals Gemma's own logits, that score prompts end on the
+space, that handle mass is computed right, that answers have Jev's shape,
 that calibration and order averaging behave, that the rungs train, save and reload, and that
-an edited question drops its old head. It does not measure accuracy: that needs the real
+an edited question or prompt template drops its old head. It does not measure accuracy: that needs the real
 weights, which `evaluate.py` uses.
 
 ## Not done yet

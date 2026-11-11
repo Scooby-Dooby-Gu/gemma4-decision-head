@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from decision import DecisionModel, build_schema  # noqa: E402
 from decision.backbone import GemmaBackbone  # noqa: E402
 from decision.head import Head  # noqa: E402
-from decision.schema import ANSWER_PREFIX  # noqa: E402
+from decision.schema import ANSWER_PREFIX, SCORE_ANSWER_PREFIX  # noqa: E402
 
 
 class WordTokenizer:
@@ -87,7 +87,7 @@ def test_zero_data_head_equals_gemma_logits(backbone):
     dm = DecisionModel(backbone, debias_order=False)
     s = dm.schema("department", TRIAGE["department"])
     view = s.views[0]
-    ids = backbone.tokenize_chat(view.prompt("I was charged twice"), ANSWER_PREFIX)
+    ids = dm.prompt_ids(view, "I was charged twice")
     h, _ = backbone.encode(ids)
     full = backbone.logits(ids)
     head = Head(len(s.options), h.shape[-1], backbone.softcap)
@@ -186,3 +186,38 @@ def test_trained_head_is_ignored_when_the_question_changes(backbone, tmp_path):
     fresh.load_heads(tmp_path)
     s = fresh.schema("department", edited)
     assert fresh.heads[("department", s.fingerprint)].rung == 0
+
+
+def test_score_prefix_ends_with_a_space_so_the_digit_is_the_next_token():
+    """Gemma writes " 1" as a space then a digit, so after a bare "Answer:" it wants a space and the
+    digits get almost no probability (0.3% on the real model). Score views must end on the space."""
+    views = {k: build_schema(k, q).views for k, q in TRIAGE.items()}
+    assert all(v.answer_prefix == SCORE_ANSWER_PREFIX == ANSWER_PREFIX + " " for v in views["frustration"])
+    # Letters and Yes/No are single " B" / " Yes" tokens, so they keep the bare prefix.
+    assert all(v.answer_prefix == ANSWER_PREFIX for v in views["department"] + views["is_urgent"])
+
+
+def test_handle_mass_is_the_softmax_share_of_the_handle_tokens(backbone):
+    dm = DecisionModel(backbone, debias_order=False)
+    s = dm.schema("frustration", TRIAGE["frustration"])
+    view = s.views[0]
+    (mass,) = dm.handle_mass(s, "Why is this still broken")
+    z = backbone.logits(dm.prompt_ids(view, "Why is this still broken"))
+    p = np.exp(z - z.max()) / np.exp(z - z.max()).sum()
+    toks = sorted({t for hd in view.handles for t in backbone.single_token_ids(hd)})
+    assert 0 <= mass <= 1 and mass == pytest.approx(p[toks].sum(), abs=1e-5)
+
+
+def test_fingerprint_changes_with_the_prompt_setup():
+    """A head is fitted to the prompt template and the views, so changing either must not reuse it."""
+    import decision.schema as schema
+
+    q = TRIAGE["department"]
+    both, listed = build_schema("d", q).fingerprint, build_schema("d", q, debias_order=False).fingerprint
+    assert both != listed
+    old = schema.TEMPLATE_VERSION
+    try:
+        schema.TEMPLATE_VERSION = old + 1
+        assert build_schema("d", q).fingerprint != both
+    finally:
+        schema.TEMPLATE_VERSION = old

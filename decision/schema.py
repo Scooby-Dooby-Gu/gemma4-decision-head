@@ -23,7 +23,15 @@ import numpy as np
 LETTERS = "ABCDEFGHJKLMNOPQRSTUVWXYZ"  # no "I": it is too common as a word to be a clean handle
 DIGITS = "123456789"
 ANSWER_PREFIX = "Answer:"
+# Gemma writes " 1" as two tokens (a space, then the digit), so after "Answer:" its next token is
+# a bare space and the digits get almost no probability. Score views end the prefix with the
+# space, so the digit is the very next token. Letters and Yes/No have " B" / " Yes" tokens and
+# keep the plain prefix.
+SCORE_ANSWER_PREFIX = ANSWER_PREFIX + " "
 BLANK_STATE = "N/A"
+# Bump whenever prompt wording or prefixes change: it is part of the fingerprint, so heads
+# trained on the old prompts are not reused.
+TEMPLATE_VERSION = 2
 
 
 @dataclass
@@ -32,6 +40,7 @@ class View:
     handles: list          # handle shown for option index k (indexed by option, not position)
     head: str              # prompt text before the state
     tail: str              # prompt text after the state
+    answer_prefix: str = ANSWER_PREFIX  # start of the model's turn; the handle is the next token
     rows: np.ndarray = None   # (K, M, D) unembedding rows of each option's handle tokens
     mask: np.ndarray = None   # (K, M) which of the M slots are real tokens
     prior: np.ndarray = None  # (K,) zero-data log-probs on a blank state (content-free prior)
@@ -53,7 +62,9 @@ class Schema:
 
     @property
     def fingerprint(self):
-        blob = json.dumps(self.question).encode()  # option order matters: it changes the prompt
+        # Option order matters (it changes the prompt), and so do the prompt template and the
+        # number of views (order debiasing on or off), since a trained head is fitted to both.
+        blob = json.dumps([TEMPLATE_VERSION, len(self.views), self.question]).encode()
         return hashlib.sha256(blob).hexdigest()[:16]
 
     def label_index(self, expected):
@@ -104,7 +115,8 @@ def build_schema(key, question, usable=lambda handle: True, debias_order=True):
         lines = [f"{i}. {c}" for i, c in enumerate(levels)]
         head = f"Task: rate {instr[0].lower() + instr[1:]}.\n\nLevels:\n" + "\n".join(lines) + "\n\nInput:\n"
         tail = "\n\nReply with only the level number."
-        return Schema(key, question, options, [View(list(range(len(levels))), options[:], head, tail)])
+        view = View(list(range(len(levels))), options[:], head, tail, answer_prefix=SCORE_ANSWER_PREFIX)
+        return Schema(key, question, options, [view])
     if qtype == "noul":
         head = f"Statement: {instr}.\n\nInput:\n"
         tail = "\n\nIs the statement true for this input? Reply with only Yes or No."

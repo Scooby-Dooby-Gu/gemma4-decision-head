@@ -22,6 +22,8 @@ from decision.head import Head
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_CASES = HERE / "cases"
+MASS_CASES = 5    # cases per question checked for handle mass
+LOW_MASS = 0.5
 
 
 def metrics(p, y, abstain_margin):
@@ -85,11 +87,18 @@ def main():
             p = dm.heads[(key, s.fingerprint)].predict(s, H)
             m = metrics(p, y, dm.abstain_margin)
             m["ms_per_case"] = ms
+            # Share of Gemma's probability on the answer handles (see DecisionModel.handle_mass),
+            # on the first few cases: a low share means the prompt is not set up to be answered.
+            m["handle_mass"] = float(np.mean([min(dm.handle_mass(s, c["state"])) for c in cases[:MASS_CASES]]))
             res[key] = {"zero_data": m, "predictions": [
                 {"id": c["id"], "expected": c["expected"][key], "got": s.options[int(pi.argmax())],
                  "confidence": float(pi.max())} for c, pi in zip(cases, p)]}
             print(f"  {key:<14} zero-data  acc {m['accuracy']:.1%}  ECE {m['ece']:.3f}  Brier {m['brier']:.3f}"
-                  f"  abstain {m['abstain_rate']:.0%}  {ms:.0f} ms/case ({len(s.views)} pass/case)")
+                  f"  abstain {m['abstain_rate']:.0%}  {ms:.0f} ms/case ({len(s.views)} pass/case)"
+                  f"  handle mass {m['handle_mass']:.2f}")
+            if m["handle_mass"] < LOW_MASS:
+                print(f"  WARNING: {key}: Gemma puts only {m['handle_mass']:.0%} of its probability on the"
+                      " answer handles, so these probabilities are not meaningful. Check the prompt.")
             if args.folds:
                 pf, rungs = kfold(dm, s, H, y, args.folds)
                 mf = metrics(pf, y, dm.abstain_margin)
