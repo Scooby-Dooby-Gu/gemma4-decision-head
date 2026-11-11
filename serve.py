@@ -20,10 +20,12 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8092)
     ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--state-first", action="store_true",
+                    help="state before the question; must match how the heads were trained")
     ap.add_argument("--heads", help="folder of trained heads")
     args = ap.parse_args()
 
-    dm = DecisionModel(GemmaBackbone(args.model))
+    dm = DecisionModel(GemmaBackbone(args.model), state_first=args.state_first)
     if args.heads:
         dm.load_heads(args.heads)
     lock = Lock()  # one forward pass at a time on the GPU

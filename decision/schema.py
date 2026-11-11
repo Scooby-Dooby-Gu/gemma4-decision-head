@@ -11,6 +11,17 @@ from the logit of that handle token. Two defaults from the design doc's "Inheren
     handle never collides with an option called "Candidate B" or a sentence starting "A ...";
   - choice questions are scored twice, in the listed and in the reversed order, and the
     per-option log-probabilities are averaged, which cancels most position and letter bias.
+
+Two prompt layouts. Each prompt is split into a shared part, whose KV cache the backbone
+computes once and reuses, and the rest, which is run per call:
+  - question first (default): [Task ... options ... Input:] | <state> ... Reply with ...
+    The shared part is the question, the same for every case, so each case only runs its state
+    and the closing line. This is the original prompt, so answers are unchanged.
+  - state first (opt-in, `state_first=True`): [Input: <state>] | Task ... options ... Reply with ...
+    The shared part is the state, the same for every question about one case, so the state is
+    read once per case. This pays off for long states (about 2x faster at ~300 state tokens,
+    2.7x at ~1,300), but on the sample suites Gemma 4 E4B answers a little less accurately with
+    the question after the input (is_urgent 83% vs 92%), so re-check accuracy on your cases.
 """
 
 import hashlib
@@ -38,15 +49,25 @@ TEMPLATE_VERSION = 2
 class View:
     order: list            # option indices in the order shown
     handles: list          # handle shown for option index k (indexed by option, not position)
-    head: str              # prompt text before the state
-    tail: str              # prompt text after the state
+    task: str              # the question and its options
+    reply: str             # the closing instruction, worded for where the state sits
+    state_first: bool = False
     answer_prefix: str = ANSWER_PREFIX  # start of the model's turn; the handle is the next token
     rows: np.ndarray = None   # (K, M, D) unembedding rows of each option's handle tokens
     mask: np.ndarray = None   # (K, M) which of the M slots are real tokens
     prior: np.ndarray = None  # (K,) zero-data log-probs on a blank state (content-free prior)
 
+    def split(self, state):
+        """(shared, rest): the cacheable part of the prompt and the part run per call.
+
+        Question first, the question is shared by every case; state first, the state is shared by
+        every question. Either way prompt = shared + rest."""
+        if self.state_first:
+            return f"Input:\n{state}\n\n", f"{self.task}\n\n{self.reply}"
+        return f"{self.task}\n\nInput:\n", f"{state}\n\n{self.reply}"
+
     def prompt(self, state):
-        return self.head + state + self.tail
+        return "".join(self.split(state))
 
 
 @dataclass
@@ -64,7 +85,8 @@ class Schema:
     def fingerprint(self):
         # Option order matters (it changes the prompt), and so do the prompt template and the
         # number of views (order debiasing on or off), since a trained head is fitted to both.
-        blob = json.dumps([TEMPLATE_VERSION, len(self.views), self.question]).encode()
+        layout = "state_first" if self.views and self.views[0].state_first else "question_first"
+        blob = json.dumps([TEMPLATE_VERSION, layout, len(self.views), self.question]).encode()
         return hashlib.sha256(blob).hexdigest()[:16]
 
     def label_index(self, expected):
@@ -88,7 +110,8 @@ def pick_handles(n, schema_text, usable):
     return picked[:n]
 
 
-def build_schema(key, question, usable=lambda handle: True, debias_order=True):
+def build_schema(key, question, usable=lambda handle: True, debias_order=True, state_first=False):
+    where = "for the input above" if state_first else ""
     qtype = question["type"]
     instr = question["instructions"].strip().rstrip(".")
     if qtype == "choice":
@@ -105,20 +128,21 @@ def build_schema(key, question, usable=lambda handle: True, debias_order=True):
             for pos, k in enumerate(order):
                 handles[k] = letters[pos]
                 lines.append(f"{letters[pos]}. {options[k]}: {question['criteria'][options[k]]}")
-            head = f"Task: {instr}.\n\nOptions:\n" + "\n".join(lines) + "\n\nInput:\n"
-            tail = "\n\nReply with only the letter of the best option."
-            views.append(View(order, handles, head, tail))
+            task = f"Task: {instr}.\n\nOptions:\n" + "\n".join(lines)
+            reply = f"Reply with only the letter of the best option{' ' + where if where else ''}."
+            views.append(View(order, handles, task, reply, state_first))
         return Schema(key, question, options, views)
     if qtype == "score":
         levels = question["criteria"]
         options = [str(i) for i in range(len(levels))]
         lines = [f"{i}. {c}" for i, c in enumerate(levels)]
-        head = f"Task: rate {instr[0].lower() + instr[1:]}.\n\nLevels:\n" + "\n".join(lines) + "\n\nInput:\n"
-        tail = "\n\nReply with only the level number."
-        view = View(list(range(len(levels))), options[:], head, tail, answer_prefix=SCORE_ANSWER_PREFIX)
+        task = f"Task: rate {instr[0].lower() + instr[1:]}.\n\nLevels:\n" + "\n".join(lines)
+        reply = f"Reply with only the level number{' ' + where if where else ''}."
+        view = View(list(range(len(levels))), options[:], task, reply, state_first,
+                    answer_prefix=SCORE_ANSWER_PREFIX)
         return Schema(key, question, options, [view])
     if qtype == "noul":
-        head = f"Statement: {instr}.\n\nInput:\n"
-        tail = "\n\nIs the statement true for this input? Reply with only Yes or No."
-        return Schema(key, question, ["true", "false"], [View([0, 1], ["Yes", "No"], head, tail)])
+        task = f"Statement: {instr}."
+        reply = f"Is the statement true for {'the input above' if state_first else 'this input'}? Reply with only Yes or No."
+        return Schema(key, question, ["true", "false"], [View([0, 1], ["Yes", "No"], task, reply, state_first)])
     raise ValueError(f"unknown question type {qtype!r}")

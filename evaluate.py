@@ -3,7 +3,9 @@
     python evaluate.py                                   # zero-data, every suite
     python evaluate.py --suite cases/support_triage.json
     python evaluate.py --folds 5                         # also k-fold the upgrade head
-    python evaluate.py --no-debias                       # listed order only (half the passes)
+    python evaluate.py --no-debias                       # listed order only (fewer passes)
+    python evaluate.py --state-first                     # state before question (for long states)
+    python evaluate.py --no-cache                        # full pass per view, to time the cache
 
 Hidden states are computed once per case and cached, so --folds only adds seconds.
 """
@@ -65,28 +67,36 @@ def main():
     ap.add_argument("--model", default=None, help="MLX checkpoint (default gemma-4-e4b-it-4bit)")
     ap.add_argument("--folds", type=int, default=0)
     ap.add_argument("--no-debias", action="store_true")
+    ap.add_argument("--state-first", action="store_true", help="state before the question (cache the state)")
+    ap.add_argument("--no-cache", action="store_true", help="no prefix KV cache: a full pass per view")
     args = ap.parse_args()
 
     from decision.backbone import DEFAULT_MODEL, GemmaBackbone
 
-    dm = DecisionModel(GemmaBackbone(args.model or DEFAULT_MODEL), debias_order=not args.no_debias)
+    dm = DecisionModel(GemmaBackbone(args.model or DEFAULT_MODEL), debias_order=not args.no_debias,
+                       state_first=args.state_first, use_cache=not args.no_cache)
+    cached = dm.use_cache
     report = {"timestamp": datetime.now().isoformat(timespec="seconds"), "model": dm.backbone.name,
-              "debias_order": dm.debias_order, "suites": {}}
+              "debias_order": dm.debias_order, "state_first": dm.state_first, "prefix_cache": cached,
+              "suites": {}}
     for path in args.suite or sorted(glob.glob(str(DEFAULT_CASES / "*.json"))):
         suite = json.loads(Path(path).read_text())
         cases = suite["cases"]
         print(f"\n== {suite['name']} ({len(cases)} cases)")
-        report["suites"][suite["name"]] = res = {}
-        for key, q in suite["questions"].items():
-            s = dm.schema(key, q)
-            t0 = time.perf_counter()
-            feats = [dm.featurize(s, c["state"]) for c in cases]
-            ms = (time.perf_counter() - t0) * 1000 / len(cases)
-            H = [np.stack([f[v] for f in feats]) for v in range(len(s.views))]
-            y = np.array([s.label_index(c["expected"][key]) for c in cases])
+        schemas = {key: dm.schema(key, q) for key, q in suite["questions"].items()}
+        # All questions about a case are answered together, as serve.py does, so the state is
+        # read once per case; time is per case for every question.
+        t0 = time.perf_counter()
+        feats = dm.features_all(cases, suite["questions"])
+        ms = (time.perf_counter() - t0) * 1000 / len(cases)
+        n_views = sum(len(s.views) for s in schemas.values())
+        print(f"  {ms:.0f} ms/case for all {len(schemas)} questions ({n_views} views,"
+              f" {('cached ' + ('state' if dm.state_first else 'question') + ' prefix') if cached else 'full pass per view'})")
+        report["suites"][suite["name"]] = res = {"ms_per_case": ms}
+        for key, s in schemas.items():
+            H, y = feats[key]
             p = dm.heads[(key, s.fingerprint)].predict(s, H)
             m = metrics(p, y, dm.abstain_margin)
-            m["ms_per_case"] = ms
             # Share of Gemma's probability on the answer handles (see DecisionModel.handle_mass),
             # on the first few cases: a low share means the prompt is not set up to be answered.
             m["handle_mass"] = float(np.mean([min(dm.handle_mass(s, c["state"])) for c in cases[:MASS_CASES]]))
@@ -94,8 +104,7 @@ def main():
                 {"id": c["id"], "expected": c["expected"][key], "got": s.options[int(pi.argmax())],
                  "confidence": float(pi.max())} for c, pi in zip(cases, p)]}
             print(f"  {key:<14} zero-data  acc {m['accuracy']:.1%}  ECE {m['ece']:.3f}  Brier {m['brier']:.3f}"
-                  f"  abstain {m['abstain_rate']:.0%}  {ms:.0f} ms/case ({len(s.views)} pass/case)"
-                  f"  handle mass {m['handle_mass']:.2f}")
+                  f"  abstain {m['abstain_rate']:.0%}  handle mass {m['handle_mass']:.2f}")
             if m["handle_mass"] < LOW_MASS:
                 print(f"  WARNING: {key}: Gemma puts only {m['handle_mass']:.0%} of its probability on the"
                       " answer handles, so these probabilities are not meaningful. Check the prompt.")

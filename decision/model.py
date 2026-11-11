@@ -6,6 +6,7 @@
     dm.fit(cases, questions)                               # optional upgrade from labelled cases
 """
 
+from collections import OrderedDict
 from pathlib import Path
 
 import numpy as np
@@ -14,10 +15,12 @@ from .head import Head
 from .schema import BLANK_STATE, build_schema
 
 ABSTAIN_MARGIN = 0.10  # top-1 minus top-2 probability below this sets "abstain": true
+PREFIX_CACHE_SIZE = 64  # prompt prefixes whose KV cache is kept (least recently used dropped)
 
 
 class DecisionModel:
-    def __init__(self, backbone=None, *, debias_order=True, abstain_margin=ABSTAIN_MARGIN):
+    def __init__(self, backbone=None, *, debias_order=True, abstain_margin=ABSTAIN_MARGIN,
+                 state_first=False, use_cache=True):
         if backbone is None:
             from .backbone import GemmaBackbone
 
@@ -25,19 +28,24 @@ class DecisionModel:
         self.backbone = backbone
         self.debias_order = debias_order
         self.abstain_margin = abstain_margin
+        # Prompt layout (see schema.py): question first (default) caches each question's prefix
+        # across cases; state_first caches each case's state across its questions.
+        self.state_first = state_first
+        self.use_cache = use_cache  # False runs a full pass per view (same answers, slower)
+        self._prefixes = OrderedDict()  # tuple(prefix ids) -> KV cache from backbone.prefill
         self.schemas = {}  # (key, fingerprint) -> Schema with rows and priors filled in
         self.heads = {}    # (key, fingerprint) -> Head
 
     # --- schema compilation (once per question, cached) --------------------------------
 
     def schema(self, key, question):
-        probe = build_schema(key, question, debias_order=self.debias_order)
+        probe = build_schema(key, question, debias_order=self.debias_order, state_first=self.state_first)
         cache_key = (key, probe.fingerprint)
         if cache_key in self.schemas:
             return self.schemas[cache_key]
         bb = self.backbone
         s = build_schema(key, question, usable=lambda c: bool(bb.single_token_ids(c)),
-                         debias_order=self.debias_order)
+                         debias_order=self.debias_order, state_first=self.state_first)
         for view in s.views:
             token_sets = [bb.single_token_ids(hd) for hd in view.handles]
             if not all(token_sets):
@@ -54,6 +62,12 @@ class DecisionModel:
         head = self.heads.get(cache_key) or Head(len(s.options), s.views[0].rows.shape[-1], bb.softcap)
         self.heads[cache_key] = head
         # Content-free prior: the zero-data head's answer on a blank state, one per view.
+        # Not with state_first: there Gemma reads the blank as a real input and answers it almost
+        # certainly ("N/A" is level 0, not urgent), and dividing that out over-corrects badly
+        # (frustration 75% -> 33% on the sample suite). Five blank variants and alpha 0.3 did not
+        # fix it, so state-first prompts run without the prior.
+        if self.state_first:
+            return s
         blank = self.featurize(s, BLANK_STATE)
         base = Head(len(s.options), s.views[0].rows.shape[-1], bb.softcap)
         for view, h in zip(s.views, blank):
@@ -63,16 +77,42 @@ class DecisionModel:
 
     # --- backbone passes ---------------------------------------------------------------
 
-    def featurize(self, schema, state):
-        """One forward pass per view; returns a list over views of the last hidden state (D,)."""
-        out = []
-        for view in schema.views:
-            last, _ = self.backbone.encode(self.prompt_ids(view, state))
-            out.append(last)
+    def prompt_ids(self, view, state):
+        """(prefix_ids, tail_ids): the cacheable shared part and the per-call rest of the prompt."""
+        shared, rest = view.split(state)
+        return self.backbone.tokenize_split(shared, rest, view.answer_prefix)
+
+    def _prefix(self, ids):
+        """KV cache for prompt prefix `ids`, computed once and kept (LRU, PREFIX_CACHE_SIZE)."""
+        key = tuple(ids)
+        if key in self._prefixes:
+            self._prefixes.move_to_end(key)
+        else:
+            self._prefixes[key] = self.backbone.prefill(ids)
+            if len(self._prefixes) > PREFIX_CACHE_SIZE:
+                self._prefixes.popitem(last=False)
+        return self._prefixes[key]
+
+    def featurize_all(self, state, schemas):
+        """Hidden states for several questions about one state: {key: list over views of (D,)}.
+
+        Each view runs only the part after its cached prefix: the state and closing line (question
+        first), or the question (state first)."""
+        out = {}
+        for key, schema in schemas.items():
+            out[key] = []
+            for view in schema.views:
+                pre, tail = self.prompt_ids(view, state)
+                if self.use_cache:
+                    last, _ = self.backbone.encode(tail, prefix=self._prefix(pre))
+                else:
+                    last, _ = self.backbone.encode(pre + tail)
+                out[key].append(last)
         return out
 
-    def prompt_ids(self, view, state):
-        return self.backbone.tokenize_chat(view.prompt(state), view.answer_prefix)
+    def featurize(self, schema, state):
+        """Hidden states for one question: a list over views of the last hidden state (D,)."""
+        return self.featurize_all(state, {schema.key: schema})[schema.key]
 
     def handle_mass(self, schema, state):
         """Share of Gemma's full next-token probability that lands on the answer handles, per view.
@@ -83,7 +123,8 @@ class DecisionModel:
         Costs a full-vocabulary pass per view, so it is a diagnostic, not part of answering."""
         out = []
         for view in schema.views:
-            z = self.backbone.logits(self.prompt_ids(view, state))
+            pre, tail = self.prompt_ids(view, state)
+            z = self.backbone.logits(pre + tail)
             p = np.exp(z - z.max())
             toks = sorted({t for hd in view.handles for t in self.backbone.single_token_ids(hd)})
             out.append(float(p[toks].sum() / p.sum()))
@@ -98,11 +139,16 @@ class DecisionModel:
 
     def probabilities(self, state, key, question):
         s = self.schema(key, question)
-        H = [h[None] for h in self.featurize(s, state)]
-        return s, self.heads[(key, s.fingerprint)].predict(s, H)[0]
+        return s, self._predict(s, self.featurize(s, state))
+
+    def _predict(self, s, feats):
+        return self.heads[(s.key, s.fingerprint)].predict(s, [h[None] for h in feats])[0]
 
     def answer_one(self, state, key, question):
         s, p = self.probabilities(state, key, question)
+        return self._format(s, p)
+
+    def _format(self, s, p):
         top = np.argsort(-p)
         confidence = float(p[top[0]])
         margin = confidence - float(p[top[1]]) if len(p) > 1 else 1.0
@@ -120,27 +166,40 @@ class DecisionModel:
         return out
 
     def answer(self, state, questions):
-        """Jev /v1/systemone `answers` for one state."""
-        return {key: self.answer_one(state, key, q) for key, q in questions.items()}
+        """Jev /v1/systemone `answers` for one state (the state is read once for all questions)."""
+        schemas = {key: self.schema(key, q) for key, q in questions.items()}
+        feats = self.featurize_all(state, schemas)
+        return {key: self._format(s, self._predict(s, feats[key])) for key, s in schemas.items()}
 
     # --- upgrade path ------------------------------------------------------------------
 
     def features(self, cases, key, question):
         """Hidden states for labelled cases: (list over views of (N, D), labels (N,))."""
-        s = self.schema(key, question)
-        feats = [self.featurize(s, c["state"]) for c in cases]
-        H = [np.stack([f[v] for f in feats]) for v in range(len(s.views))]
-        y = np.array([s.label_index(c["expected"][key]) for c in cases])
-        return H, y
+        return self.features_all(cases, {key: question})[key]
+
+    def features_all(self, cases, questions):
+        """{key: (H, y)} for every question, reading each case's state once."""
+        schemas = {key: self.schema(key, q) for key, q in questions.items()}
+        feats = [self.featurize_all(c["state"], schemas) for c in cases]
+        out = {}
+        for key, s in schemas.items():
+            H = [np.stack([f[key][v] for f in feats]) for v in range(len(s.views))]
+            y = np.array([s.label_index(c["expected"][key]) for c in cases])
+            out[key] = (H, y)
+        return out
 
     def fit(self, cases, questions, rung=None, cached=None):
         """Train each question's head on labelled cases (jev-vs-local format). Returns rungs used.
 
         `cached` can map question key -> (H, y) from `features` to skip the backbone passes."""
         used = {}
+        cached = dict(cached or {})
+        missing = {k: q for k, q in questions.items() if k not in cached}
+        if missing:
+            cached.update(self.features_all(cases, missing))
         for key, q in questions.items():
             s = self.schema(key, q)
-            H, y = (cached or {}).get(key) or self.features(cases, key, q)
+            H, y = cached[key]
             head = Head(len(s.options), H[0].shape[-1], self.backbone.softcap)
             self.heads[(key, s.fingerprint)] = head.fit(s, H, y, rung=rung)
             used[key] = head.rung
