@@ -3,6 +3,7 @@
     python -m experiments.learning_curves                       # every suite (~45 min first run)
     python -m experiments.learning_curves --suite clinc_banking --suite sst5
     python -m experiments.learning_curves --limit 40            # quick smoke test
+    python -m experiments.learning_curves --holdout             # the 7 held-out CLINC domains
 
 For each suite, Gemma's hidden states for every train and test case are computed once and cached
 in experiments/cache/ (the slow part). Then, for each size n in --sizes and each of --seeds
@@ -138,7 +139,8 @@ def summarize(result):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--suite", action="append", choices=suites.ALL)
+    ap.add_argument("--suite", action="append", choices=suites.ALL + suites.HOLDOUT)
+    ap.add_argument("--holdout", action="store_true", help="run the held-out CLINC domains instead")
     ap.add_argument("--sizes", type=int, nargs="+", default=SIZES)
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--limit", type=int, default=0, help="first N train and test cases only (smoke test)")
@@ -151,9 +153,9 @@ def main():
     stamp = datetime.now()
     report = {"timestamp": stamp.isoformat(timespec="seconds"), "model": dm.backbone.name,
               "sizes": args.sizes, "seeds": args.seeds, "limit": args.limit, "suites": []}
-    out = ROOT / "results" / f"learning-curves-{stamp:%Y%m%d-%H%M%S}"
+    out = ROOT / "results" / f"learning-curves{'-holdout' if args.holdout else ''}-{stamp:%Y%m%d-%H%M%S}"
     out.parent.mkdir(exist_ok=True)
-    for name in args.suite or suites.ALL:
+    for name in args.suite or (suites.HOLDOUT if args.holdout else suites.ALL):
         report["suites"].append(run_suite(dm, name, args.sizes, args.seeds, args.limit))
         out.with_suffix(".json").write_text(json.dumps(report, indent=2))  # after each suite
         md = "\n\n".join(summarize(r) for r in report["suites"])

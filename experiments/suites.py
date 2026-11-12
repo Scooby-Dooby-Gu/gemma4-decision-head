@@ -3,7 +3,7 @@
 Each builder returns {"name", "questions": {key: question}, "train": [case], "test": [case]},
 where a case is {"id", "state", "expected": {key: answer}} as in cases/*.json.
 
-    clinc_<domain>   choice: one CLINC150 domain (15 intents) plus "out_of_scope", which is
+    clinc_<domain>   choice: one CLINC150 domain (3 used for tuning, 7 held out) (15 intents) plus "out_of_scope", which is
                      trained and tested on CLINC's labelled out-of-scope queries
     banking77_g<k>   choice: one of four fixed groups of ~20 Banking77 intents (77 options do
                      not fit the ~34 single-token handles)
@@ -32,6 +32,31 @@ CLINC_DOMAINS = {
     "travel": "book_flight book_hotel car_rental travel_suggestion travel_alert "
               "travel_notification carry_on timezone vaccines translate flight_status "
               "international_visa lost_luggage plug_type exchange_rate",
+}
+# The other seven domains were held out: no training setting was chosen by looking at them.
+# Run them once, with the settings frozen, to check those settings were not fitted to the suites
+# above (python -m experiments.learning_curves --holdout).
+CLINC_HOLDOUT_DOMAINS = {
+    "kitchen_and_dining": "recipe food_last meal_suggestion nutrition_info ingredient_substitution "
+                          "calories cook_time restaurant_reservation restaurant_reviews "
+                          "accept_reservations confirm_reservation cancel_reservation how_busy "
+                          "ingredients_list restaurant_suggestion",
+    "home": "what_song play_music todo_list_update reminder reminder_update calendar_update "
+            "order_status update_playlist shopping_list calendar next_song order todo_list "
+            "shopping_list_update smart_home",
+    "auto_and_commute": "traffic directions gas gas_type distance current_location mpg "
+                        "oil_change_when oil_change_how jump_start uber schedule_maintenance "
+                        "last_maintenance tire_pressure tire_change",
+    "utility": "weather alarm date find_phone share_location timer make_call calculator definition "
+               "measurement_conversion flip_coin spelling time roll_dice text",
+    "work": "pto_request pto_request_status next_holiday insurance insurance_change pto_balance "
+            "pto_used w2 schedule_meeting meeting_schedule rollover_401k income taxes "
+            "direct_deposit payday",
+    "small_talk": "who_made_you meaning_of_life who_do_you_work_for do_you_have_pets "
+                  "what_are_your_hobbies fun_fact what_is_your_name where_are_you_from goodbye "
+                  "thank_you greeting tell_joke are_you_a_bot how_old_are_you what_can_i_ask_you",
+    "meta": "change_speed user_name whisper_mode yes change_volume no change_language repeat "
+            "change_accent cancel sync_device change_user_name change_ai_name reset_settings maybe",
 }
 CLINC_OOS_TRAIN = 100  # out-of-scope training examples (as many as each intent has)
 CLINC_OOS_TEST = 150   # of CLINC's 1,000 out-of-scope test queries, sampled
@@ -80,7 +105,7 @@ def _suite(name, key, question, train, test):
 def clinc(domain):
     ds = _load("clinc/clinc_oos", "plus")
     names = ds["train"].features["intent"].names
-    intents = CLINC_DOMAINS[domain].split()
+    intents = {**CLINC_DOMAINS, **CLINC_HOLDOUT_DOMAINS}[domain].split()
     criteria = {i: _human(i) for i in intents}
     criteria["out_of_scope"] = "none of the above: the request is about something else"
     question = {"type": "choice",
@@ -142,3 +167,4 @@ def build(name):
 
 
 ALL = [f"clinc_{d}" for d in CLINC_DOMAINS] + [f"banking77_g{g}" for g in range(BANKING77_GROUPS)] + ["sst5"]
+HOLDOUT = [f"clinc_{d}" for d in CLINC_HOLDOUT_DOMAINS]
