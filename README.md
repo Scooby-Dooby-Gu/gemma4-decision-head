@@ -160,7 +160,15 @@ pip install -r requirements-experiments.txt
 python -m experiments.learning_curves                      # all suites, ~1 h the first time
 python -m experiments.learning_curves --suite sst5 --sizes 0 10 50
 python -m experiments.learning_curves --limit 40           # smoke test
+python -m experiments.learning_curves --holdout            # the 7 held-out CLINC domains
 ```
+
+**Held-out check.** The training settings (learning rates, guard margin and minimum, rung
+defaults) were chosen while looking at the suites above, so they were re-tested once, frozen,
+on the seven CLINC150 domains not used during development (`--holdout`). At 20 labels per
+option `train()` gained 4.3 to 18.9 points over zero-data (median 7.9, against 2.5 to 7.1 on
+the three development CLINC domains), stayed above zero-data on average at every size, and
+lowered calibration error on all seven (`results/learning-curves-holdout-20261111-193534`).
 
 Results go to `results/learning-curves-<time>.json` and a `.md` summary. Option descriptions
 are the intent names in words, so zero-data accuracy is a floor. These datasets are not your
