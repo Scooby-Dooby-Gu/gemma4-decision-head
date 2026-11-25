@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card transaction search: decision models</title>
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #fff; --ink: #1c1917; --muted: #78716c; --line: #e7e5e4;
+    --head: #0f766e; --head-soft: #ccfbf1; --head-ink: #134e4a;
+    --laya: #c2410c; --laya-soft: #ffedd5; --laya-ink: #7c2d12;
+    --jev: #4338ca; --jev-soft: #e0e7ff; --jev-ink: #312e81;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); margin: 0 0 20px; max-width: 820px; }
+  .controls { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+  .seg button { border: 0; background: none; padding: 6px 12px; font: inherit; cursor: pointer; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .seg button:disabled { opacity: .4; cursor: default; }
+  label.small, .small { color: var(--muted); font-size: 13px; }
+  select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); }
+  #q { width: 100%; font-size: 20px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); outline: none; }
+  #q:focus { border-color: #a8a29e; }
+  .examples { margin: 10px 0 18px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .examples span { color: var(--muted); font-size: 13px; margin-right: 2px; }
+  .examples button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .panels { display: grid; gap: 12px; grid-template-columns: 1fr; margin-bottom: 18px; }
+  .panels.n2 { grid-template-columns: 1fr 1fr; } .panels.n3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 900px) { .panels.n2, .panels.n3 { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; display: flex; justify-content: space-between; gap: 8px; }
+  .panel.head h2 { color: var(--head); } .panel.laya h2 { color: var(--laya); } .panel.jev h2 { color: var(--jev); }
+  .busy { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); visibility: hidden; }
+  .busy.on { visibility: visible; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 30px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 6px 3px 11px; font-size: 14px; }
+  .head .chip { background: var(--head-soft); color: var(--head-ink); }
+  .laya .chip { background: var(--laya-soft); color: var(--laya-ink); }
+  .jev .chip { background: var(--jev-soft); color: var(--jev-ink); }
+  .chip .conf { font-size: 12px; opacity: .7; }
+  .chip button { border: 0; background: rgba(0,0,0,.08); border-radius: 999px; width: 18px; height: 18px; line-height: 18px; padding: 0; cursor: pointer; font-size: 12px; color: inherit; }
+  .panel .chip.ghost { background: none; border: 1px dashed #a8a29e; color: var(--muted); padding-right: 11px; }
+  .none { color: var(--muted); font-size: 14px; }
+  .stats { margin-top: 8px; font-size: 13px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+  .stats b { color: var(--ink); font-weight: 600; }
+  .where { margin-top: 6px; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); word-break: break-word; }
+  .results-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 6px; }
+  .results-head h3 { font-size: 15px; margin: 0; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; background: #f5f5f4; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; } td.amt { text-align: right; }
+  .flag { color: #b91c1c; font-weight: 600; font-size: 12px; }
+  .err { color: #b91c1c; font-size: 13px; margin-top: 6px; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 18px; max-width: 820px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Card transaction search</h1>
+  <p class="sub">Type what you're looking for, in English, Spanish or French. <span id="total">227,468</span> synthetic card transactions (Sparkov, Jan 1 to Nov 24, 2026). Each engine picks every filter from a fixed list of options; nothing is generated. "Last month" means October, counted from Nov 24.</p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Engine" id="modes"></div>
+    <label class="small">Apply a filter at confidence
+      <select id="threshold"><option>0.3</option><option selected>0.5</option><option>0.7</option><option>0.9</option></select>
+    </label>
+  </div>
+
+  <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="gas over $50 last month" autofocus>
+
+  <div class="examples"><span>Try:</span></div>
+
+  <div class="panels" id="panels"></div>
+
+  <div class="results-head"><h3 id="results-title">Transactions</h3><span class="small" id="results-note"></span></div>
+  <table>
+    <thead><tr><th>Date</th><th>Time</th><th>Merchant</th><th>Category</th><th class="amt">Amount</th><th>Cardholder</th><th>City</th><th>State</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="note">Filters update on each finished word and after a short pause. Dashed chips are what an engine leans towards but hasn't applied: below the confidence cutoff, or an amount or month not typed yet. Remove a chip with × and it stays off until that filter's value changes. The Gemma head and Laya run on this machine; Jev's time includes the network. In Compare, the Gemma head and Laya share the GPU, so each is a little slower than on its own.</p>
+</main>
+
+<script>
+const EXAMPLES = ["gas over $50 last month", "fraud in new york last week", "online grocery orders",
+  "restaurants in texas on weekends", "vuelos de más de 500 dólares", "fraude el mes pasado",
+  "achats en ligne de moins de 20 dollars", "small online purchases on sundays"];
+const CATS = { gas_transport: "Gas & transport", grocery_net: "Groceries · online", grocery_pos: "Groceries",
+  shopping_net: "Shopping · online", shopping_pos: "Shopping", misc_net: "Other · online", misc_pos: "Other",
+  food_dining: "Dining", entertainment: "Entertainment", health_fitness: "Health & fitness", home: "Home",
+  kids_pets: "Kids & pets", personal_care: "Personal care", travel: "Travel" };
+const ORDER = ["head", "laya", "jev"];
+const $ = (s) => document.querySelector(s);
+const input = $("#q");
+let labels = {}, mode = "head";
+const state = {};
+for (const e of ORDER) state[e] = { inflight: false, again: false, dismissed: {}, last: null };
+
+const available = () => ORDER.filter((e) => labels[e]);
+const engines = () => mode === "all" ? available() : [mode];
+const query = () => input.value.trim();
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function renderModes() {
+  const names = { head: "Gemma head", laya: "Laya", jev: "Jev" };
+  const buttons = ORDER.map((e) => `<button data-mode="${e}" ${labels[e] ? "" : "disabled title='not set up'"} aria-pressed="${mode === e}">${names[e]}</button>`);
+  buttons.push(`<button data-mode="all" aria-pressed="${mode === "all"}" ${available().length > 1 ? "" : "disabled"}>Compare</button>`);
+  $("#modes").innerHTML = buttons.join("");
+  $("#modes").querySelectorAll("button").forEach((btn) => btn.onclick = () => {
+    mode = btn.dataset.mode; renderModes(); renderPanels(); fireAll(); input.focus();
+  });
+}
+
+function renderPanels() {
+  const wrap = $("#panels");
+  wrap.className = "panels n" + engines().length;
+  wrap.innerHTML = engines().map((e) => `
+    <section class="panel ${e}">
+      <h2><span>${esc(labels[e] || e)}</span><span class="busy" id="busy-${e}">working…</span></h2>
+      <div class="chips" id="chips-${e}"><span class="none">No filters</span></div>
+      <div class="stats" id="stats-${e}"></div>
+      <div class="where" id="where-${e}"></div>
+      <div class="err" id="err-${e}"></div>
+    </section>`).join("");
+  for (const e of engines()) if (state[e].last) render(e, state[e].last);
+}
+
+async function fire(e) {
+  const s = state[e];
+  if (s.inflight) { s.again = true; return; }
+  s.inflight = true; s.again = false;
+  const q = query();
+  const busy = $(`#busy-${e}`); if (busy) busy.classList.add("on");
+  const t0 = performance.now();
+  try {
+    const res = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q, engine: e, threshold: Number($("#threshold").value), exclude: s.dismissed }) });
+    const body = await res.json();
+    body.roundtrip = performance.now() - t0;
+    if (!res.ok) throw new Error(body.error || res.statusText);
+    s.last = body;
+    if (engines().includes(e)) render(e, body);
+  } catch (err) {
+    const el = $(`#err-${e}`); if (el) el.textContent = String(err.message || err);
+  } finally {
+    s.inflight = false;
+    const b = $(`#busy-${e}`); if (b) b.classList.remove("on");
+    if (s.again || query() !== q) fire(e);  // the text moved on while this one ran
+  }
+}
+const fireAll = () => { for (const e of engines()) fire(e); };
+
+function render(e, b) {
+  const pct = (x) => Math.round(x * 100) + "%";
+  const chips = b.chips.map((c, i) => `<span class="chip" title="confidence ${pct(c.confidence)}">${esc(c.label)} <span class="conf">${pct(c.confidence)}</span><button aria-label="Remove ${esc(c.label)}" data-i="${i}">×</button></span>`);
+  const ghosts = (b.pending || []).map((p) => `<span class="chip ghost" title="${p.abstain ? "too close to call" : "below the cutoff, or waiting for an amount or month"}">${esc(p.label)} <span class="conf">${pct(p.confidence)}</span></span>`);
+  const box = $(`#chips-${e}`);
+  box.innerHTML = chips.concat(ghosts).join("") || `<span class="none">No filters</span>`;
+  box.querySelectorAll("button").forEach((btn) => btn.onclick = () => {
+    const c = b.chips[Number(btn.dataset.i)];
+    state[e].dismissed[c.field] = c.value;
+    fire(e);
+  });
+  const n = b.search.count.toLocaleString(), total = b.search.total.toLocaleString();
+  $(`#stats-${e}`).innerHTML = `<span><b>${n}</b> of ${total}</span>` +
+    `<span>model <b>${b.q ? Math.round(b.model_ms) + " ms" : "–"}</b></span>` +
+    `<span>database ${Math.round(b.db_ms)} ms</span><span>round trip ${Math.round(b.roundtrip)} ms</span>`;
+  $(`#where-${e}`).textContent = b.q ? `WHERE ${b.search.where}` : "";
+  $(`#err-${e}`).textContent = "";
+  if (e === engines()[0]) {  // the table follows the first engine shown
+    $("#results-title").textContent = `Transactions · ${n} of ${total}`;
+    $("#results-note").textContent = mode === "all" ? `showing ${labels[e]}'s results, newest first` : "newest first";
+    $("#rows").innerHTML = b.search.rows.map((r) => `<tr><td class="num">${r.date}</td><td class="num">${r.time.slice(0, 5)}</td><td>${esc(r.merchant)}</td><td>${CATS[r.category] || esc(r.category)}</td><td class="num amt">$${r.amount.toFixed(2)}</td><td>${esc(r.first)} ${esc(r.last)}</td><td>${esc(r.city)}</td><td>${r.state}</td><td>${r.is_fraud ? '<span class="flag">FRAUD</span>' : ""}</td></tr>`).join("");
+  }
+}
+
+let timer = null;
+input.addEventListener("input", () => {
+  clearTimeout(timer);
+  if (!query()) for (const e of ORDER) state[e].dismissed = {};
+  if (input.value === "" || input.value.endsWith(" ")) return fireAll();
+  timer = setTimeout(fireAll, 250);
+});
+input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { clearTimeout(timer); fireAll(); } });
+$("#threshold").onchange = fireAll;
+const ex = $(".examples");
+for (const text of EXAMPLES) {
+  const b = document.createElement("button"); b.textContent = text;
+  b.onclick = () => { input.value = text; for (const e of ORDER) state[e].dismissed = {}; fireAll(); input.focus(); };
+  ex.appendChild(b);
+}
+fetch("/api/health").then((r) => r.json()).then((h) => {
+  labels = h.engines;
+  $("#total").textContent = h.total.toLocaleString();
+  $("#threshold").value = String(h.threshold);
+  if (!labels[mode]) mode = available()[0];
+  renderModes(); renderPanels();
+}).finally(fireAll);
+</script>
+</body>
+</html>

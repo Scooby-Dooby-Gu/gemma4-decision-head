@@ -6,6 +6,19 @@ The client search in `poc/search` was rerun on a second domain: typed search ove
 
 [Sparkov](https://github.com/namebrandon/Sparkov_Data_Generation) (MIT) generates synthetic card transactions. It ran at commit `b5eb45c` with 300 cardholders, seed 7, from 2026-01-01 to 2026-11-24. That gave 227,468 transactions in 14 categories across 43 states, 2,798 of them fraud. Sparkov runs in its own folder and virtual environment (`.vendor/sparkov`, not committed). [`data.py`](data.py) loads its files into `txn.db` and leaves out the fake SSNs, card numbers and addresses it writes. The steps are in `data.py`.
 
+## The demo
+
+```bash
+python -m poc.payments.app        # http://127.0.0.1:8094
+```
+
+A search box over the transactions that updates its filters after every word. Pick the trained Gemma head, trained Laya or Jev, or Compare to see all three side by side. Each applied filter is a chip with its confidence; × removes it until its value changes. Dashed chips show what an engine leans towards but hasn't applied, such as an amount not typed yet. Under each engine are its time, the SQL `WHERE` clause and the number of matches, and the newest matching transactions are listed below.
+
+- **What it loads:** the trained Gemma heads from `poc/payments/heads/`, and Laya from `poc/payments/laya/checkpoint`. Laya runs in [`laya_server.py`](laya_server.py) in Laya's own environment, which [`app.py`](app.py) starts. Jev needs a key in `.env.local`. An engine whose files or key are missing is left out.
+- **Launch entry:** `payments-search`.
+
+**A fix to the data.** Sparkov at `b5eb45c` draws each transaction's date, time of day and category from linked random columns and then sorts them. As a result, each category landed in a few months: almost all gas in January and February, groceries in March, dining in July and August, travel in November. [`data.py`](data.py)'s `spread_dates` shuffles each cardholder's dates among their legitimate transactions, with a fixed seed, so every month has a normal mix. Monthly totals and fraud dates are unchanged. The benchmark only scores filters, not the rows they return, so its results don't depend on this.
+
 ## Filters
 
 [`filters.py`](filters.py) asks seven questions, each with a "not mentioned" option:
