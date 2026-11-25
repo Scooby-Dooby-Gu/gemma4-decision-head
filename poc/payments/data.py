@@ -12,10 +12,12 @@ then, from the repo root:
     python -m poc.payments.data .vendor/sparkov/out
 
 300 cardholders, 227,468 transactions, 2026-01-01 to 2026-11-24. The fake SSNs, card and
-account numbers and street addresses Sparkov writes are left out.
+account numbers and street addresses Sparkov writes are left out, and
+spread_dates() undoes a Sparkov bug that ties each category to a few months.
 """
 
 import csv
+import random
 import sqlite3
 import sys
 from pathlib import Path
@@ -45,10 +47,33 @@ def build(src, path=DB):
                 batch.append(v)
             db.executemany(f"INSERT INTO txn VALUES ({','.join('?' * len(KEEP))})", batch)
             n += len(batch)
+    spread_dates(db)
     for col in ("date", "category", "state", "amount"):
         db.execute(f"CREATE INDEX idx_{col} ON txn({col})")
     db.commit()
     return db, n
+
+
+def spread_dates(db, seed=7):
+    """Undo Sparkov's link between category and date.
+
+    Sparkov at b5eb45c draws a transaction's date, time of day and category from linked random
+    columns and then sorts them, so each category lands in a few months (almost all gas in January
+    and February, groceries in March, dining in July and August, travel in November). For each
+    cardholder, this shuffles the dates among their legitimate transactions: the same days, amounts,
+    times and categories, in a realistic mix per month. Fraud keeps Sparkov's dates, which come in
+    bursts per cardholder. The benchmark only scores filters, so its results don't depend on this."""
+    rng = random.Random(seed)
+    by_holder = {}
+    for tid, holder, day in db.execute("SELECT id, first || ' ' || last || ' ' || dob, date FROM txn "
+                                       "WHERE is_fraud = 0 ORDER BY id"):
+        by_holder.setdefault(holder, []).append((tid, day))
+    updates = []
+    for rows in by_holder.values():
+        days = [d for _, d in rows]
+        rng.shuffle(days)
+        updates += [(d, tid) for (tid, _), d in zip(rows, days)]
+    db.executemany("UPDATE txn SET date = ? WHERE id = ?", updates)
 
 
 def connect():
