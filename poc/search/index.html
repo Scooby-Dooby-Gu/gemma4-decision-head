@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRM search: decision head vs generated JSON</title>
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #fff; --ink: #1c1917; --muted: #78716c; --line: #e7e5e4;
+    --head: #0f766e; --head-soft: #ccfbf1; --llm: #7c3aed; --llm-soft: #ede9fe; --warn: #b45309;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .controls { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+  .seg button { border: 0; background: none; padding: 6px 12px; font: inherit; cursor: pointer; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  label.small { color: var(--muted); font-size: 13px; }
+  select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); }
+  #q { width: 100%; font-size: 20px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); outline: none; }
+  #q:focus { border-color: #a8a29e; }
+  .examples { margin: 10px 0 18px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .examples span { color: var(--muted); font-size: 13px; margin-right: 2px; }
+  .examples button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .panels { display: grid; gap: 12px; grid-template-columns: 1fr; margin-bottom: 18px; }
+  .panels.both { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 760px) { .panels.both { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; display: flex; justify-content: space-between; gap: 8px; }
+  .panel.head h2 { color: var(--head); } .panel.llm h2 { color: var(--llm); }
+  .busy { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); visibility: hidden; }
+  .busy.on { visibility: visible; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 30px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 6px 3px 11px; font-size: 14px; }
+  .head .chip { background: var(--head-soft); color: #134e4a; } .llm .chip { background: var(--llm-soft); color: #4c1d95; }
+  .chip .conf { font-size: 12px; opacity: .7; }
+  .chip button { border: 0; background: rgba(0,0,0,.08); border-radius: 999px; width: 18px; height: 18px; line-height: 18px; padding: 0; cursor: pointer; font-size: 12px; color: inherit; }
+  .chip.ghost { background: none; border: 1px dashed #a8a29e; color: var(--muted); padding-right: 11px; }
+  .none { color: var(--muted); font-size: 14px; }
+  .stats { margin-top: 8px; font-size: 13px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+  .stats b { color: var(--ink); font-weight: 600; }
+  .where { margin-top: 6px; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); word-break: break-word; }
+  .results-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 6px; }
+  .results-head h3 { font-size: 15px; margin: 0; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; background: #f5f5f4; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .err { color: #b91c1c; font-size: 13px; margin-top: 6px; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>CRM search</h1>
+  <p class="sub">Type who you're looking for. 5,000 made-up clients. Filters come from a decision head on Gemma 4 E4B (no text generated) or from Gemma 4 12B writing JSON.</p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Engine">
+      <button data-mode="head" aria-pressed="true">Decision head</button>
+      <button data-mode="llm" aria-pressed="false">12B writes JSON</button>
+      <button data-mode="both" aria-pressed="false">Both</button>
+    </div>
+    <label class="small">Head applies a filter at confidence
+      <select id="threshold"><option>0.5</option><option>0.7</option><option>0.9</option></select>
+    </label>
+  </div>
+
+  <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="new york with kids over 40" autofocus>
+
+  <div class="examples"><span>Try:</span></div>
+
+  <div class="panels" id="panels"></div>
+
+  <div class="results-head"><h3 id="results-title">Clients</h3><span class="small" id="results-note"></span></div>
+  <table>
+    <thead><tr><th>Name</th><th>City</th><th>State</th><th>Age</th><th>Kids</th><th>Marital</th><th>Occupation</th><th>Last contact</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="note">Filters update on each finished word and after a short pause. Dashed chips are what the head leans towards but hasn't applied yet. Remove a chip with × and it stays off until that filter's value changes. In Both mode the two models share the GPU, so each is slower than on its own.</p>
+</main>
+
+<script>
+const EXAMPLES = ["new york with kids over 40", "child free in california", "married couples in ohio over 50",
+  "retirees in the bay area", "jubilados en arizona", "la quarantaine à boston", "divorced dads in texas"];
+const ENGINES = { head: "Decision head · Gemma 4 E4B", llm: "Generated JSON · Gemma 4 12B" };
+const $ = (s) => document.querySelector(s);
+const input = $("#q");
+let mode = "head";
+const state = {};
+for (const e of Object.keys(ENGINES)) state[e] = { inflight: false, again: false, dismissed: {}, last: null, sentAt: 0 };
+
+function engines() { return mode === "both" ? ["head", "llm"] : [mode]; }
+function query() { return input.value.trim(); }
+
+function renderPanels() {
+  const wrap = $("#panels");
+  wrap.className = "panels" + (mode === "both" ? " both" : "");
+  wrap.innerHTML = engines().map((e) => `
+    <section class="panel ${e}" id="panel-${e}">
+      <h2><span>${ENGINES[e]}</span><span class="busy" id="busy-${e}">working…</span></h2>
+      <div class="chips" id="chips-${e}"><span class="none">No filters</span></div>
+      <div class="stats" id="stats-${e}"></div>
+      <div class="where" id="where-${e}"></div>
+      <div class="err" id="err-${e}"></div>
+    </section>`).join("");
+  for (const e of engines()) if (state[e].last) render(e, state[e].last);
+}
+
+async function fire(e) {
+  const s = state[e];
+  if (s.inflight) { s.again = true; return; }
+  s.inflight = true; s.again = false;
+  const q = query();
+  const busy = $(`#busy-${e}`); if (busy) busy.classList.add("on");
+  const t0 = performance.now();
+  try {
+    const res = await fetch(`/api/${e}`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q, threshold: Number($("#threshold").value), exclude: s.dismissed }) });
+    const body = await res.json();
+    body.roundtrip = performance.now() - t0;
+    if (!res.ok) throw new Error(body.error || res.statusText);
+    s.last = body;
+    if (engines().includes(e)) render(e, body);
+  } catch (err) {
+    const el = $(`#err-${e}`); if (el) el.textContent = String(err.message || err);
+  } finally {
+    s.inflight = false;
+    const b = $(`#busy-${e}`); if (b) b.classList.remove("on");
+    if (s.again || query() !== q) fire(e);  // the text moved on while this one ran
+  }
+}
+
+function fireAll() { for (const e of engines()) fire(e); }
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+
+function render(e, b) {
+  const chips = b.chips.map((c, i) => `<span class="chip" title="${c.confidence != null ? "confidence " + Math.round(c.confidence * 100) + "%" : ""}">${esc(c.label)}${c.confidence != null ? ` <span class="conf">${Math.round(c.confidence * 100)}%</span>` : ""}<button aria-label="Remove ${esc(c.label)}" data-engine="${e}" data-i="${i}">×</button></span>`);
+  const ghosts = (b.pending || []).map((p) => `<span class="chip ghost" title="${p.abstain ? "too close to call" : "below the threshold or waiting for a number"}">${esc(p.label)} <span class="conf">${Math.round(p.confidence * 100)}%</span></span>`);
+  $(`#chips-${e}`).innerHTML = chips.concat(ghosts).join("") || `<span class="none">No filters</span>`;
+  $(`#chips-${e}`).querySelectorAll("button").forEach((btn) => btn.onclick = () => {
+    const c = b.chips[Number(btn.dataset.i)];
+    state[e].dismissed[c.field] = c.value;
+    fire(e);
+  });
+  const n = b.search.count.toLocaleString(), total = b.search.total.toLocaleString();
+  $(`#stats-${e}`).innerHTML = `<span><b>${n}</b> of ${total}</span>` +
+    `<span>model <b>${b.q ? Math.round(b.model_ms) + " ms" : "–"}</b></span>` +
+    `<span>database ${b.db_ms.toFixed(1)} ms</span><span>round trip ${Math.round(b.roundtrip)} ms</span>`;
+  $(`#where-${e}`).textContent = b.q ? `WHERE ${b.search.where}` : "";
+  $(`#err-${e}`).textContent = "";
+  // The table follows the decision head when it's on, otherwise the 12B.
+  if (e === engines()[0]) {
+    $("#results-title").textContent = `Clients · ${n} of ${total}`;
+    $("#results-note").textContent = mode === "both" ? "showing the decision head's results" : "";
+    $("#rows").innerHTML = b.search.rows.map((r) => `<tr><td>${esc(r.name)}</td><td>${esc(r.city)}</td><td>${r.state}</td><td class="num">${r.age}</td><td class="num">${r.kids}</td><td>${r.marital}</td><td>${esc(r.occupation)}</td><td class="num">${r.last_contact}</td></tr>`).join("");
+  }
+}
+
+let timer = null;
+input.addEventListener("input", () => {
+  clearTimeout(timer);
+  if (!query()) for (const e of Object.keys(state)) state[e].dismissed = {};
+  if (input.value === "" || input.value.endsWith(" ")) return fireAll();
+  timer = setTimeout(fireAll, 250);
+});
+input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { clearTimeout(timer); fireAll(); } });
+$("#threshold").onchange = () => fire("head");
+document.querySelectorAll(".seg button").forEach((btn) => btn.onclick = () => {
+  mode = btn.dataset.mode;
+  document.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+  renderPanels(); fireAll(); input.focus();
+});
+const ex = $(".examples");
+for (const text of EXAMPLES) {
+  const b = document.createElement("button"); b.textContent = text;
+  b.onclick = () => { input.value = text; for (const e of Object.keys(state)) state[e].dismissed = {}; fireAll(); input.focus(); };
+  ex.appendChild(b);
+}
+renderPanels();
+fetch("/api/health").then((r) => r.json()).then((h) => {
+  $("#threshold").value = String(h.threshold);
+  document.querySelector('[data-mode="head"]').textContent = h.trained ? "Decision head (trained)" : "Decision head";
+  ENGINES.head = `Decision head · Gemma 4 E4B${h.trained ? " · trained" : " · zero labels"}`;
+  renderPanels();
+}).finally(fireAll);
+</script>
+</body>
+</html>

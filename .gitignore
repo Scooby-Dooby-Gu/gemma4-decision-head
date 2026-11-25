@@ -21,3 +21,9 @@ models/
 
 # Experiment feature cache
 experiments/cache/
+poc/search/crm.db
+poc/search/cache/
+
+# API keys
+.env
+.env.local
