@@ -133,3 +133,41 @@ Caveats: the training phrases and the test queries were both written by me, so t
 
 1. **Real phrasing.** Labels from people actually searching (or another person writing them) would say more than my pools do. The misses above are the list to start from.
 2. **One pass for all filters.** Encode the query once and read every filter from that hidden state with trained probes, to get from ~315 ms to under 100 ms.
+
+# Jev: TypeSafe's hosted decision model
+
+```bash
+# a key in .env.local (gitignored): OPENROUTER_API_KEY=... or TYPESAFE_API_KEY=...
+python -m poc.search.jev --name-keys          # 439 updates, about 2 minutes, about $0.03
+python -m poc.search.compare results/search-phase0-20261124-084530-listed-noprior-trained.json \
+    --threshold 0.5 --llm-run results/search-llm12b-20261124-082322.json \
+    --jev-run results/search-jev-20261124-201524-namekeys.json
+```
+
+[`jev.py`](jev.py) sends Jev (`typesafe/jev-1.14-20261014`, through OpenRouter's Decisions API) the same five questions the head gets, for every word-by-word prefix of the same 134 test queries. It scores the replies with the same `to_filters`. Each update is one request of about 1,450 input tokens, almost all of them the questions, and the whole run cost under 3 cents. Jev's times are end to end from this laptop, network included. The head and the 12B run locally.
+
+**State keys matter to Jev.** The first run used the head's questions unchanged, with states keyed by two-letter code. Jev reads an option's key as well as its description, so the word "in" became Indiana, "la" Louisiana and "pas" Pennsylvania while the query was still being typed (`results/search-jev-20261124-201344.json`). The head never sees the keys. Keying states by name (`--name-keys`: "indiana", "new_york") removed those, so that's the run in the table.
+
+| | Head, trained (0.5) | 12B writes JSON | Jev, state codes (0.5) | Jev, state names (0.5) |
+|---|---|---|---|---|
+| Latency per update, p50 / p95 | 321 / 339 ms | 940 / 1,125 ms | 139 / 193 ms | **137 / 189 ms** |
+| All filters right | 90.3% | **92.5%** | 91.8% | **92.5%** |
+| state / kids / age / marital | 97.8 / 96.3 / 97.8 / 98.5% | 99.3 / 99.3 / 95.5 / 98.5% | 99.3 / 94.8 / 98.5 / 99.3% | 99.3 / 94.8 / 99.3 / 99.3% |
+| English / Spanish / French | 91.4 / 86.7 / 85.7% | 93.3 / 86.7 / 92.9% | 92.4 / 86.7 / 92.9% | 92.4 / 93.3 / 92.9% |
+| Wrong filter while typing | **5.6%** | 12.1% | 11.1% | **5.6%** |
+
+Full report: `results/search-compare-20261124-201537.md`.
+
+Jev's results depend on the threshold much more than the trained head's do. The head's answers are almost never below 0.6 confidence, so its row barely moves:
+
+| Threshold | 0.0 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 |
+|---|---|---|---|---|---|---|
+| Head, trained: all right / wrong while typing | 90.3 / 5.6% | 90.3 / 5.6% | 90.3 / 4.9% | 88.1 / 4.9% | 86.6 / 4.3% | 82.8 / 3.0% |
+| Jev, state names: all right / wrong while typing | 96.3 / 10.8% | 92.5 / 5.6% | 91.0 / 4.3% | 88.8 / 3.6% | 88.1 / 3.0% | 83.6 / 2.0% |
+
+- **Jev is the fastest of the three, network included.** About 140 ms end to end against 321 ms for the head on this laptop. That's the "instant" the commenter describes, and it holds with five questions in one request. The head's time is five passes. Reading every filter from one pass (Next, item 2) is the change that would close that gap.
+- **With no tuning, Jev is as accurate as the 12B.** 92.5% at 0.5, and 96.3% with no threshold, where it gets every Spanish query right. Jev's no-threshold score is the best finished-query score of anything tested here. It comes at 10.8% wrong while typing, though; 0.5 or 0.6 gives a better balance.
+- **Its misses are mostly words that imply children.** "parents", "moms", "families in boston", "texas parents over 50", "parents in tennessee", "padres divorciados" and "parents divorcés" don't set has-kids. For "parents" Jev picks "not mentioned" at 0.35. It seems to read the kids question literally. Rewording the option ("Wants clients who have children, such as parents") would probably fix it, but that would be tuning to the test set, so it isn't done here. Unlike the head, Jev can't be trained on labels: that wording is the only lever.
+- **The shared traps:** "georgia phone number" catches all three, and "childless couples" reads as married for Jev and the head.
+
+Caveats: 0.5 was picked on the test set, for Jev as for the head. One run, from one place at one time of day. A hosted model can change, so the run pins `jev-1.14`. The kids misses are phrasing kept out of the head's training, and Jev never saw any of my phrasing at all.
