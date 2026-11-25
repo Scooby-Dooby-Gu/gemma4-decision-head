@@ -1,0 +1,1342 @@
+{
+ "config": {
+  "model": "typesafe/jev-1.14-20261014",
+  "provider": "openrouter",
+  "queries": 3,
+  "updates": 10,
+  "input_tokens": 14506,
+  "note": "ms is end to end from this machine, network included"
+ },
+ "records": [
+  {
+   "id": "en001",
+   "lang": "en",
+   "words": 1,
+   "final": false,
+   "text": "clients",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 0.96,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.96,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0.01,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.03,
+      "NC": 0,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.88,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.88,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0.1,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0.01,
+      "UT": 0,
+      "WA": 0.01,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "married": 0,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 186.3,
+   "usage": {
+    "input_tokens": 1449,
+    "output_tokens": 602,
+    "cost": 6.0858e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.0858e-05,
+     "upstream_inference_prompt_cost": 6.0858e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en001",
+   "lang": "en",
+   "words": 2,
+   "final": false,
+   "text": "clients in",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "IN",
+     "confidence": 0.65,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.26,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0.02,
+      "GA": 0,
+      "IL": 0.01,
+      "IN": 0.66,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.02,
+      "NC": 0.02,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0.01,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.78,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.79,
+      "AK": 0,
+      "AZ": 0.01,
+      "AR": 0,
+      "CA": 0.14,
+      "CO": 0.01,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0.02,
+      "UT": 0,
+      "WA": 0.03,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 0.98,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.98,
+      "married": 0.02,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 171.3,
+   "usage": {
+    "input_tokens": 1450,
+    "output_tokens": 602,
+    "cost": 6.09e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.09e-05,
+     "upstream_inference_prompt_cost": 6.09e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en001",
+   "lang": "en",
+   "words": 3,
+   "final": true,
+   "text": "clients in texas",
+   "expected": {
+    "state": "TX",
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "none": 1,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0,
+      "NC": 0,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "TX",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "none": 0,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 1,
+      "UT": 0,
+      "WA": 0,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "married": 0,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 181.5,
+   "usage": {
+    "input_tokens": 1451,
+    "output_tokens": 602,
+    "cost": 6.0942e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.0942e-05,
+     "upstream_inference_prompt_cost": 6.0942e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en002",
+   "lang": "en",
+   "words": 1,
+   "final": false,
+   "text": "people",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 0.93,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.93,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0.01,
+      "DE": 0,
+      "FL": 0.01,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.03,
+      "NC": 0.01,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0.01,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.84,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.85,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0.11,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0.02,
+      "UT": 0,
+      "WA": 0.02,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 0.98,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.99,
+      "has_kids": 0.01,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 0.99,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.99,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0.01
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "married": 0,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 153.1,
+   "usage": {
+    "input_tokens": 1449,
+    "output_tokens": 602,
+    "cost": 6.0858e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.0858e-05,
+     "upstream_inference_prompt_cost": 6.0858e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en002",
+   "lang": "en",
+   "words": 2,
+   "final": false,
+   "text": "people in",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 0.56,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.58,
+      "AL": 0.01,
+      "CT": 0,
+      "DC": 0.01,
+      "DE": 0,
+      "FL": 0.01,
+      "GA": 0.01,
+      "IL": 0,
+      "IN": 0.29,
+      "KY": 0,
+      "ME": 0.01,
+      "MD": 0,
+      "MA": 0.01,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.03,
+      "NC": 0.01,
+      "OH": 0.01,
+      "PA": 0.01,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0.01,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.77,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.78,
+      "AK": 0,
+      "AZ": 0.01,
+      "AR": 0,
+      "CA": 0.15,
+      "CO": 0.01,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0.01,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0.01,
+      "UT": 0.01,
+      "WA": 0.02,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 0.98,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.99,
+      "has_kids": 0.01,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 0.97,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.97,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0.01,
+      "around": 0,
+      "decade": 0.01,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0.01
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 0.95,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.96,
+      "married": 0.04,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 115.0,
+   "usage": {
+    "input_tokens": 1450,
+    "output_tokens": 602,
+    "cost": 6.09e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.09e-05,
+     "upstream_inference_prompt_cost": 6.09e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en002",
+   "lang": "en",
+   "words": 3,
+   "final": true,
+   "text": "people in ohio",
+   "expected": {
+    "state": "OH",
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "OH",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "none": 0,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0,
+      "NC": 0,
+      "OH": 1,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.98,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.98,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0.01,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0.01,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0,
+      "UT": 0,
+      "WA": 0,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "married": 0,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 106.1,
+   "usage": {
+    "input_tokens": 1451,
+    "output_tokens": 602,
+    "cost": 6.0942e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.0942e-05,
+     "upstream_inference_prompt_cost": 6.0942e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en003",
+   "lang": "en",
+   "words": 1,
+   "final": false,
+   "text": "anyone",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 0.95,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.95,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0.01,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0.01,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.02,
+      "NC": 0.01,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.91,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.91,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0.07,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0.01,
+      "UT": 0,
+      "WA": 0.01,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 0.98,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.99,
+      "has_kids": 0.01,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 0.94,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.95,
+      "married": 0.03,
+      "single": 0.02,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 89.7,
+   "usage": {
+    "input_tokens": 1450,
+    "output_tokens": 602,
+    "cost": 6.09e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.09e-05,
+     "upstream_inference_prompt_cost": 6.09e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en003",
+   "lang": "en",
+   "words": 2,
+   "final": false,
+   "text": "anyone in",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 0.62,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.63,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0.02,
+      "DE": 0,
+      "FL": 0.02,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0.29,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0.01,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.02,
+      "NC": 0,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0.01,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.89,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.89,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0.07,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 0,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0.02,
+      "UT": 0,
+      "WA": 0.02,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 0.94,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.95,
+      "married": 0.04,
+      "single": 0.01,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 126.5,
+   "usage": {
+    "input_tokens": 1451,
+    "output_tokens": 602,
+    "cost": 6.0942e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.0942e-05,
+     "upstream_inference_prompt_cost": 6.0942e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en003",
+   "lang": "en",
+   "words": 3,
+   "final": false,
+   "text": "anyone in new",
+   "expected": {
+    "state": null,
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "NY",
+     "confidence": 0.41,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.35,
+      "AL": 0,
+      "CT": 0.01,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0.05,
+      "NJ": 0.15,
+      "NY": 0.43,
+      "NC": 0.01,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "none",
+     "confidence": 0.53,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.55,
+      "AK": 0.01,
+      "AZ": 0.01,
+      "AR": 0,
+      "CA": 0.04,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0.03,
+      "NV": 0.03,
+      "NM": 0.29,
+      "ND": 0.02,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0,
+      "UT": 0,
+      "WA": 0.02,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 0.74,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.77,
+      "older_than": 0,
+      "younger_than": 0.05,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0.18,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 0.81,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 0.85,
+      "married": 0.07,
+      "single": 0.07,
+      "divorced": 0.01,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 110.2,
+   "usage": {
+    "input_tokens": 1452,
+    "output_tokens": 602,
+    "cost": 6.0984e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.0984e-05,
+     "upstream_inference_prompt_cost": 6.0984e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  },
+  {
+   "id": "en003",
+   "lang": "en",
+   "words": 4,
+   "final": true,
+   "text": "anyone in new mexico",
+   "expected": {
+    "state": "NM",
+    "kids": null,
+    "age": null,
+    "age_range": null,
+    "marital": null
+   },
+   "answers": {
+    "state_east": {
+     "choice": "none",
+     "confidence": 0.99,
+     "abstain": false,
+     "probabilities": {
+      "none": 0.99,
+      "AL": 0,
+      "CT": 0,
+      "DC": 0,
+      "DE": 0,
+      "FL": 0,
+      "GA": 0,
+      "IL": 0,
+      "IN": 0,
+      "KY": 0,
+      "ME": 0,
+      "MD": 0,
+      "MA": 0,
+      "MI": 0,
+      "MS": 0,
+      "NH": 0,
+      "NJ": 0,
+      "NY": 0.01,
+      "NC": 0,
+      "OH": 0,
+      "PA": 0,
+      "RI": 0,
+      "SC": 0,
+      "TN": 0,
+      "VT": 0,
+      "VA": 0,
+      "WV": 0,
+      "WI": 0
+     }
+    },
+    "state_west": {
+     "choice": "NM",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "none": 0,
+      "AK": 0,
+      "AZ": 0,
+      "AR": 0,
+      "CA": 0,
+      "CO": 0,
+      "HI": 0,
+      "ID": 0,
+      "IA": 0,
+      "KS": 0,
+      "LA": 0,
+      "MN": 0,
+      "MO": 0,
+      "MT": 0,
+      "NE": 0,
+      "NV": 0,
+      "NM": 1,
+      "ND": 0,
+      "OK": 0,
+      "OR": 0,
+      "SD": 0,
+      "TX": 0,
+      "UT": 0,
+      "WA": 0,
+      "WY": 0
+     }
+    },
+    "kids": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "has_kids": 0,
+      "no_kids": 0
+     }
+    },
+    "age": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "older_than": 0,
+      "younger_than": 0,
+      "between": 0,
+      "around": 0,
+      "decade": 0,
+      "young": 0,
+      "middle_aged": 0,
+      "seniors": 0
+     }
+    },
+    "marital": {
+     "choice": "not_mentioned",
+     "confidence": 1.0,
+     "abstain": false,
+     "probabilities": {
+      "not_mentioned": 1,
+      "married": 0,
+      "single": 0,
+      "divorced": 0,
+      "widowed": 0
+     }
+    }
+   },
+   "ms": 276.5,
+   "usage": {
+    "input_tokens": 1453,
+    "output_tokens": 602,
+    "cost": 6.1026e-05,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 6.1026e-05,
+     "upstream_inference_prompt_cost": 6.1026e-05,
+     "upstream_inference_completions_cost": 0
+    }
+   }
+  }
+ ]
+}

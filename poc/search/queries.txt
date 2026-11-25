@@ -1,0 +1,154 @@
+# CRM search queries with the filters each should produce, hand-written for phase 0.
+#
+# One query per line, in segments separated by " | ". A segment is text plus, optionally, the
+# filters that become known once the segment is typed:
+#     new york {state=NY} | with kids {kids=has_kids} | over 40 {age=older_than 41-}
+# Filters: state=<code>, kids=has_kids|no_kids, marital=married|single|divorced|widowed,
+# age=<kind> <lo>-<hi> (either end may be blank; the kinds are in filters.py).
+# The measurement types each query a word at a time: until a segment is finished, its filters
+# are expected to be off. "@es" / "@fr" / "@en" switch the language tag for the lines after it.
+
+@en
+# --- one filter --------------------------------------------------------------------------
+clients in | texas {state=TX}
+people in | ohio {state=OH}
+anyone in | new mexico {state=NM}
+contacts in | west virginia {state=WV}
+clients from | virginia {state=VA}
+leads in | washington state {state=WA}
+clients in | washington dc {state=DC}
+people in | georgia {state=GA}
+NYC {state=NY} | clients
+the big apple {state=NY}
+clients in | philly {state=PA}
+chicago {state=IL} | contacts
+seattle {state=WA}
+miami {state=FL} | clients
+boston {state=MA} | area
+the bay area {state=CA}
+socal {state=CA} | clients
+las vegas {state=NV}
+anyone in | the lone star state {state=TX}
+nola {state=LA}
+with kids {kids=has_kids}
+parents {kids=has_kids}
+clients with children {kids=has_kids}
+moms {kids=has_kids}
+child free {kids=no_kids}
+no children {kids=no_kids}
+0 kids {kids=no_kids}
+no kids {kids=no_kids}
+childless {kids=no_kids}
+without children {kids=no_kids}
+married {marital=married}
+single {marital=single}
+divorced {marital=divorced}
+widowed {marital=widowed}
+not married {marital=single}
+over 40 {age=older_than 41-}
+over 65 {age=older_than 66-}
+under 30 {age=younger_than -29}
+under 25 {age=younger_than -24}
+50+ {age=older_than 50-}
+40 and up {age=older_than 40-}
+between 30 and 45 {age=between 30-45}
+aged 35 to 50 {age=between 35-50}
+in their 40s {age=decade 40-49}
+in their forties {age=decade 40-49}
+thirtysomethings {age=decade 30-39}
+around 50 {age=around 48-52}
+40 year olds {age=around 38-42}
+retirees {age=seniors 65-}
+seniors {age=seniors 65-}
+young professionals {age=young 18-34}
+middle aged {age=middle_aged 40-59}
+older than 55 {age=older_than 56-}
+younger than 35 {age=younger_than -34}
+
+# --- two or more filters -----------------------------------------------------------------
+new york {state=NY} | with kids {kids=has_kids} | over 40 {age=older_than 41-}
+new york {state=NY} | no kids {kids=no_kids}
+married {marital=married} | couples in | ohio {state=OH}
+NYC {state=NY} | parents {kids=has_kids}
+child free {kids=no_kids} | in | california {state=CA}
+0 kids {kids=no_kids} | under 35 {age=younger_than -34}
+single {marital=single} | moms {kids=has_kids} | in | florida {state=FL}
+retirees {age=seniors 65-} | in | arizona {state=AZ}
+divorced {marital=divorced} | dads {kids=has_kids}
+widowed {marital=widowed} | over 60 {age=older_than 61-}
+clients in their 40s {age=decade 40-49} | in | seattle {state=WA}
+families {kids=has_kids} | in | boston {state=MA}
+chicago {state=IL} | clients | without kids {kids=no_kids}
+between 30 and 45 {age=between 30-45} | in | new jersey {state=NJ}
+50+ {age=older_than 50-} | and married {marital=married}
+young professionals {age=young 18-34} | in | denver {state=CO}
+middle aged {age=middle_aged 40-59} | parents {kids=has_kids}
+married {marital=married} | folks in | the bay area {state=CA}
+single {marital=single} | under 30 {age=younger_than -29} | in | austin {state=TX}
+texas {state=TX} | parents {kids=has_kids} | over 50 {age=older_than 51-}
+divorced {marital=divorced} | in | michigan {state=MI} | with kids {kids=has_kids}
+people over 40 {age=older_than 41-} | with no kids {kids=no_kids}
+married {marital=married} | with children {kids=has_kids} | in | new jersey {state=NJ}
+widows {marital=widowed} | in | florida {state=FL}
+seniors {age=seniors 65-} | in | phoenix {state=AZ}
+single {marital=single} | in | nyc {state=NY}
+childless {kids=no_kids} | couples in | denver {state=CO}
+clients in | oregon {state=OR} | under 40 {age=younger_than -39}
+moms {kids=has_kids} | in their 30s {age=decade 30-39}
+married {marital=married} | no kids {kids=no_kids} | over 35 {age=older_than 36-}
+pennsylvania {state=PA} | retirees {age=seniors 65-}
+atlanta {state=GA} | families {kids=has_kids}
+clients in | north carolina {state=NC} | aged 25 to 40 {age=between 25-40}
+divorced {marital=divorced} | over 50 {age=older_than 51-}
+parents {kids=has_kids} | in | tennessee {state=TN}
+single {marital=single} | without kids {kids=no_kids}
+minnesota {state=MN} | married {marital=married} | couples
+new hampshire {state=NH} | clients | over 60 {age=older_than 61-}
+young {age=young 18-34} | parents {kids=has_kids} | in | utah {state=UT}
+colorado {state=CO} | single {marital=single} | dads {kids=has_kids}
+
+# --- traps: words that look like a filter but aren't one ---------------------------------
+parents of | teenagers {kids=has_kids}
+with kids {kids=has_kids} | over 10
+clients with | 3 kids {kids=has_kids}
+john smith
+recent signups
+clients who called last week
+top accounts by revenue
+vip clients
+new leads
+clients with a georgia | phone number
+anyone who mentioned | moving
+
+@es
+nueva york {state=NY} | con hijos {kids=has_kids} | mayores de 40 {age=older_than 41-}
+clientes en | texas {state=TX} | sin hijos {kids=no_kids}
+casados {marital=married} | en | florida {state=FL}
+solteros {marital=single} | menores de 30 {age=younger_than -29}
+jubilados {age=seniors 65-} | en | arizona {state=AZ}
+padres {kids=has_kids} | divorciados {marital=divorced}
+personas de 40 a 50 años {age=between 40-50}
+viudas {marital=widowed} | en | california {state=CA}
+familias {kids=has_kids} | en | chicago {state=IL}
+en sus cuarentas {age=decade 40-49}
+sin niños {kids=no_kids} | en | nuevo méxico {state=NM}
+mayores de 65 {age=older_than 66-}
+clientes casados {marital=married} | con niños {kids=has_kids}
+jóvenes {age=young 18-34} | en | miami {state=FL}
+madres solteras {marital=single,kids=has_kids} | en | nueva jersey {state=NJ}
+
+@fr
+new york {state=NY} | avec enfants {kids=has_kids} | plus de 40 ans {age=older_than 41-}
+clients au | texas {state=TX} | sans enfants {kids=no_kids}
+mariés {marital=married} | en | floride {state=FL}
+célibataires {marital=single} | moins de 30 ans {age=younger_than -29}
+retraités {age=seniors 65-} | en | californie {state=CA}
+parents {kids=has_kids} | divorcés {marital=divorced}
+entre 35 et 50 ans {age=between 35-50}
+veufs {marital=widowed}
+la quarantaine {age=decade 40-49} | à | boston {state=MA}
+familles {kids=has_kids} | à | seattle {state=WA}
+pas d'enfants {kids=no_kids} | en | géorgie {state=GA}
+jeunes {age=young 18-34} | à | chicago {state=IL}
+couples mariés {marital=married} | avec enfants {kids=has_kids} | en | pennsylvanie {state=PA}
+mères célibataires {marital=single,kids=has_kids} | à | miami {state=FL}
