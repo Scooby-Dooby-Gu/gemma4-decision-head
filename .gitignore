@@ -33,3 +33,4 @@ poc/search/cache/
 poc/payments/*.db
 poc/payments/cache/
 poc/payments/heads/
+poc/payments/laya/

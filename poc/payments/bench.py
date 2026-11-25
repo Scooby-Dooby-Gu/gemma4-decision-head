@@ -236,6 +236,46 @@ def jev_engine(model=None):
             "note": "ms is end to end from this machine, network included"}, ask
 
 
+def laya_engine(default="multilingual", checkpoint=None):
+    """Laya's encoder checkpoints (English, and multilingual for other languages, picked by
+    Laya's own router), run locally. Needs Laya's own environment:
+
+        .vendor/laya/.venv/bin/python -m poc.payments.bench laya
+
+    The state questions have 25 to 28 options, past the ~20 Laya's docs suggest at its default
+    192-token question budget, so the budget is raised to 256 (the state still gets 248 tokens).
+    Confidence is the chosen option's probability, gated like the other decision models; Laya's
+    own abstain flag and route are kept in the record."""
+    import laya
+    from laya.router import Router
+
+    if checkpoint:  # one fine-tuned checkpoint (poc.payments.laya_train) answers every language
+        agent = laya.load(checkpoint)
+        predict = lambda text, qs: dict(agent.predict(text, qs), routing={"model": "fine-tuned"})
+    else:
+        # Short text whose language can't be told goes to `default`: Laya ships "multilingual".
+        router = Router(vega=False, preload=True, default=default)
+        predict = lambda text, qs: router.predict(text, qs, head_max_len=256)
+    questions, back = name_keys(QUESTIONS)
+
+    def ask(text):
+        out = predict(text, questions)
+        answers, extra = {}, {}
+        for name, q in QUESTIONS.items():
+            a = out["answers"][name]
+            choice = back.get(name, {}).get(a.get("choice"), a.get("choice"))
+            probs = a.get("probabilities") or {}
+            answers[name] = {"choice": choice, "confidence": float(probs.get(a.get("choice"), 0.0)), "abstain": False}
+            extra[name] = {"laya_abstain": a.get("abstain"), "route": a.get("route")}
+        return {"answers": answers, "laya": extra, "checkpoint": (out.get("routing") or {}).get("model")}
+
+    ask("warm up")
+    ask("calentamiento")  # loads the multilingual checkpoint too
+
+    return {"engine": "laya", "default": default, "checkpoint": str(checkpoint) if checkpoint else None,
+            "model": f"laya {laya.__version__} encoders (english + multilingual), local"}, ask
+
+
 # --- scoring -------------------------------------------------------------------------------
 
 def filters_of(record, threshold):
@@ -283,6 +323,10 @@ def pct(a, b):
 def label(config):
     if config["engine"] == "head":
         return "Gemma head, " + ("trained" if config.get("heads") else "no examples")
+    if config["engine"] == "laya":
+        if config.get("checkpoint"):
+            return "Laya, trained"
+        return "Laya" + (", English fallback" if config.get("default") == "english" else "")
     return {"llm": "Gemma 4 12B writing JSON", "jev": "Jev"}[config["engine"]]
 
 
@@ -327,9 +371,10 @@ def compare(paths, thresholds):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("engine", choices=("head", "llm", "jev", "compare"))
+    ap.add_argument("engine", choices=("head", "llm", "jev", "laya", "laya-en", "compare"))
     ap.add_argument("runs", nargs="*", help="for compare: saved runs, in column order")
     ap.add_argument("--heads", help="trained heads folder (head engine)")
+    ap.add_argument("--laya-checkpoint", help="fine-tuned Laya checkpoint (laya engine)")
     ap.add_argument("--thresholds", help="for compare: one per run, comma-separated (default 0.5)")
     ap.add_argument("--limit", type=int)
     args = ap.parse_args()
@@ -342,10 +387,11 @@ def main():
         print(text)
         print(f"saved {out}")
         return
-    config, ask = {"head": lambda: head_engine(args.heads), "llm": llm_engine, "jev": jev_engine}[args.engine]()
+    config, ask = {"head": lambda: head_engine(args.heads), "llm": llm_engine, "jev": jev_engine,
+                   "laya": lambda: laya_engine(checkpoint=args.laya_checkpoint), "laya-en": lambda: laya_engine("english")}[args.engine]()
     queries = parse_queries()[: args.limit]
     records = run(queries, ask)
-    tag = args.engine + ("-trained" if args.heads else "")
+    tag = args.engine + ("-trained" if args.heads or args.laya_checkpoint else "")
     out = RESULTS / f"payments-{tag}-{stamp}.json"
     config.update(queries=len(queries), updates=len(records))
     out.write_text(json.dumps({"config": config, "records": records}, indent=1, ensure_ascii=False))

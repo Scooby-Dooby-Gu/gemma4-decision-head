@@ -52,3 +52,33 @@ Full report: `results/payments-compare-20261124-211225.md`.
 - **French is the weakest language for every model.** "essence" (gas), "courses" (groceries) and "hier" (yesterday) were each missed by at least two of the three. "vols" means both flights and thefts, and the trained head read "vols de plus de 500 dollars" as fraud.
 
 Caveats: the same author wrote the test queries, the training phrases and the labels. Some labels are judgement calls: should "online purchases" set shopping, or "grocery store runs" in-person? The 0.5 and 0.9 thresholds were picked on the test results. Each number comes from one run.
+
+# Laya: an open-weight decision model, run locally
+
+[Laya](https://github.com/NandhaKishorM/laya) (Convai Innovations, Apache 2.0) is the open-weight model Runware serves as `runware:laya@1`. It's an encoder (ModernBERT for English, 421M parameters; mmBERT for 100+ languages, 322M) that answers every question in one forward pass, in the same request format as Jev. It ran on this laptop's GPU through PyTorch. The code is at commit `54c7286` in `.vendor/laya`, and the weights are `convaiinnovations/laya` revision `fd4f9db`. Neither is committed.
+
+```bash
+.vendor/laya/.venv/bin/python -m poc.payments.bench laya                     # Laya's router, as shipped
+python -m poc.payments.laya_train                                            # the 1,887 examples as laya-train JSONL
+.vendor/laya/.venv/bin/laya-train --data poc/payments/laya/train.jsonl \
+    --base <the multilingual checkpoint folder> --out poc/payments/laya/checkpoint --head-max-len 256
+.vendor/laya/.venv/bin/python -m poc.payments.bench laya --laya-checkpoint poc/payments/laya/checkpoint
+```
+
+Laya got the same seven questions as Jev, with states keyed by name. Its question budget was raised from 192 to 256 tokens, because the state questions have 25 to 28 options and Laya's docs advise care above about 20. Training used `laya-train`'s defaults (the published notebook's settings: 4 epochs, batch 64, 752 updates) on the multilingual checkpoint, with the same 1,887 examples the Gemma head learned from. A question still being typed was left out of its row. One trained checkpoint answers every language.
+
+| | Time per update, p50 / p95 | Every filter right | English / Spanish / French | Wrong filter while typing |
+|---|---|---|---|---|
+| Laya, as shipped (0.9) | 75 / 175 ms | 26.4% | 26.5 / 28.6 / 23.8% | 9.5% |
+| Laya, trained (0.5) | **75 / 78 ms** | 91.7% | 93.1 / **100** / 76.2% | 2.8% |
+| Jev (0.5) | 137 / 211 ms | 91.7% | 93.1 / 95.2 / 81.0% | 8.3% |
+| Gemma head, trained (0.5) | 424 / 433 ms | 91.7% | 94.1 / 90.5 / 81.0% | **2.4%** |
+| Gemma 4 12B writing JSON | 1,561 / 2,035 ms | **93.8%** | 95.1 / 95.2 / 85.7% | 5.5% |
+
+Full report: `results/payments-compare-20261125-082255.md`.
+
+- **As shipped, Laya isn't usable for this.** At its best threshold it left plain category words unset ("flights", "haircuts", "pet supplies"), and at lower ones it set fraud on most queries. Its own model card says the same: "a fast base to specialise, not a zero-shot decision engine". Its router also sends short text it can't place to the multilingual checkpoint, which covered 376 of 397 updates. Falling back to English instead didn't help (23.6%). Gating on Laya's own `route` flag set almost no filters.
+- **Trained, it ties Jev and the Gemma head at a fifth of the Gemma head's time.** It reached 91.7% at 75 ms per update, the fastest of everything tested, with the steadiest timing (p95 78 ms). It made almost as few mistakes while typing as the trained Gemma head (2.8% against 2.4%), and got all 21 Spanish queries right.
+- **The threshold barely matters once trained.** Every cutoff from 0 to 0.8 gives 91.7%. Laya fits its calibration on 400 of the training examples.
+- **Its misses are category words it never saw,** mostly in French ("essence", "coiffeur", "salle de sport" as entertainment, "vols" left unset), plus "pas de fraude" read as fraud and "on fridays" read as weekends.
+- **Training took 10 hours of wall time here because the Mac slept overnight.** An epoch took about 16 minutes awake, so about an hour in all, against 14 minutes of backbone passes plus seconds of fitting for the Gemma head. Training rewrites all of Laya's encoder weights; the Gemma head leaves Gemma frozen.
