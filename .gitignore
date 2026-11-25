@@ -27,3 +27,9 @@ poc/search/cache/
 # API keys
 .env
 .env.local
+
+# third-party generators (Sparkov)
+.vendor/
+poc/payments/*.db
+poc/payments/cache/
+poc/payments/heads/

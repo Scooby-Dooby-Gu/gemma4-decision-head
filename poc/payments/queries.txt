@@ -1,0 +1,166 @@
+# Card transaction search queries with the filters each should produce. Same segment format as
+# poc/search/queries.txt, except that filters in a segment are separated by ";":
+#     gas {category=gas_transport} | over $50 {amount=over 50-}
+# Filters:
+#   category=<key in filters.CATEGORIES>        channel=online|in_person
+#   amount=<kind> <lo>-<hi>  (dollars, either end may be blank; kinds in filters.QUESTIONS)
+#   date=<kind> <value>      (value as filters.date_value writes it, relative to 2026-11-24)
+#   state=<code>             fraud=fraud|legit
+# Each query is typed a word at a time; until a segment is finished its filters are expected off.
+
+@en
+# --- one filter: category -----------------------------------------------------------------
+gas {category=gas_transport}
+fuel {category=gas_transport} | purchases
+uber rides {category=gas_transport}
+petrol {category=gas_transport}
+gas station {category=gas_transport} | visits
+groceries {category=grocery}
+supermarket {category=grocery} | spending
+grocery store {category=grocery} | runs
+restaurants {category=food_dining}
+dining out {category=food_dining}
+coffee shops {category=food_dining}
+takeout {category=food_dining}
+flights {category=travel}
+hotel bookings {category=travel}
+airfare {category=travel}
+movie tickets {category=entertainment}
+concerts {category=entertainment}
+gym memberships {category=health_fitness}
+pharmacy {category=health_fitness} | charges
+doctor visits {category=health_fitness}
+haircuts {category=personal_care}
+salon {category=personal_care} | visits
+beauty products {category=personal_care}
+furniture {category=home}
+home improvement {category=home}
+hardware store {category=home}
+pet supplies {category=kids_pets}
+vet bills {category=kids_pets}
+toys {category=kids_pets}
+childcare {category=kids_pets}
+clothes shopping {category=shopping}
+electronics {category=shopping}
+apple store {category=shopping} | purchases
+# --- one filter: online or in person, fraud -------------------------------------------------
+online purchases {channel=online}
+online orders {channel=online}
+e-commerce {channel=online} | transactions
+in-store purchases {channel=in_person}
+card present {channel=in_person} | transactions
+paid in person {channel=in_person}
+fraud {fraud=fraud}
+suspicious charges {fraud=fraud}
+flagged transactions {fraud=fraud}
+fraudulent {fraud=fraud} | payments
+legit transactions only {fraud=legit}
+non-fraud {fraud=legit} | charges
+genuine {fraud=legit} | purchases
+# --- one filter: amount ---------------------------------------------------------------------
+over $100 {amount=over 100-}
+charges | under $20 {amount=under -20}
+purchases | above 500 dollars {amount=over 500-}
+less than 10 bucks {amount=under -10}
+between $50 and $200 {amount=between 50-200}
+around $100 {amount=around 90-110}
+about 40 dollars {amount=around 36-44}
+more than 1k {amount=over 1000-}
+big purchases {amount=large 500-}
+small charges {amount=small -20}
+# --- one filter: date -----------------------------------------------------------------------
+in march {date=month 2026-03-01..2026-03-31}
+transactions | from july {date=month 2026-07-01..2026-07-31}
+last month {date=last_month 2026-10-01..2026-10-31}
+this month {date=this_month 2026-11-01..2026-11-24}
+yesterday {date=yesterday 2026-11-23..2026-11-23}
+today {date=today 2026-11-24..2026-11-24}
+past week {date=past_week 2026-11-18..2026-11-24}
+on fridays {date=weekday dow:4}
+on weekends {date=weekend dow:5,6}
+saturday {date=weekday dow:5} | purchases
+# --- one filter: state ----------------------------------------------------------------------
+purchases in | texas {state=TX}
+cardholders in | ohio {state=OH}
+customers from | new york {state=NY}
+charges in | california {state=CA}
+spending in | florida {state=FL}
+gas {category=gas_transport} | in indiana {state=IN}
+# --- two or more filters --------------------------------------------------------------------
+gas {category=gas_transport} | over $50 {amount=over 50-}
+online {channel=online} | grocery orders {category=grocery}
+groceries {category=grocery} | last month {date=last_month 2026-10-01..2026-10-31}
+restaurants {category=food_dining} | in texas {state=TX}
+fraud {fraud=fraud} | over $1000 {amount=over 1000-}
+suspicious {fraud=fraud} | online purchases {channel=online}
+travel {category=travel} | in july {date=month 2026-07-01..2026-07-31}
+flights {category=travel} | over 500 {amount=over 500-}
+weekend {date=weekend dow:5,6} | dining {category=food_dining}
+fraudulent {fraud=fraud} | gas station charges {category=gas_transport}
+amazon orders {category=shopping; channel=online}
+pet store {category=kids_pets} | purchases under $30 {amount=under -30}
+gym {category=health_fitness} | charges this month {date=this_month 2026-11-01..2026-11-24}
+in-store {channel=in_person} | shopping {category=shopping} | in ohio {state=OH}
+fraud {fraud=fraud} | in new york {state=NY} | last week {date=past_week 2026-11-18..2026-11-24}
+entertainment {category=entertainment} | on saturdays {date=weekday dow:5}
+big travel {amount=large 500-; category=travel} | expenses
+legit {fraud=legit} | grocery charges {category=grocery} | in may {date=month 2026-05-01..2026-05-31}
+coffee {category=food_dining} | under 5 bucks {amount=under -5}
+hotels {category=travel} | between 100 and 300 {amount=between 100-300}
+uber {category=gas_transport} | rides yesterday {date=yesterday 2026-11-23..2026-11-23}
+online {channel=online} | over $200 {amount=over 200-} | flagged as fraud {fraud=fraud}
+furniture {category=home} | in florida {state=FL} | over 1000 {amount=over 1000-}
+haircuts {category=personal_care} | in april {date=month 2026-04-01..2026-04-30}
+customers in | georgia {state=GA} | with fraud {fraud=fraud}
+small {amount=small -20} | online purchases {channel=online} | on sundays {date=weekday dow:6}
+# --- traps: words that look like a filter but aren't --------------------------------------
+charges that may be fraud {fraud=fraud}
+orders for 2 people | over $50 {amount=over 50-}
+all transactions in 2026
+the last 3 purchases
+
+@es
+gasolina {category=gas_transport}
+compras en línea {channel=online}
+supermercado {category=grocery}
+restaurantes {category=food_dining} | en texas {state=TX}
+vuelos {category=travel} | de más de 500 dólares {amount=over 500-}
+fraude {fraud=fraud} | el mes pasado {date=last_month 2026-10-01..2026-10-31}
+cargos sospechosos {fraud=fraud}
+compras | de menos de 20 dólares {amount=under -20}
+gimnasio {category=health_fitness}
+peluquería {category=personal_care}
+juguetes {category=kids_pets} | en marzo {date=month 2026-03-01..2026-03-31}
+ropa {category=shopping} | en la tienda {channel=in_person}
+entre 50 y 100 dólares {amount=between 50-100}
+los fines de semana {date=weekend dow:5,6}
+los viernes {date=weekday dow:4}
+ayer {date=yesterday 2026-11-23..2026-11-23}
+la semana pasada {date=past_week 2026-11-18..2026-11-24}
+compras en | florida {state=FL} | este mes {date=this_month 2026-11-01..2026-11-24}
+hoteles {category=travel} | en julio {date=month 2026-07-01..2026-07-31}
+muebles {category=home} | de más de 1000 {amount=over 1000-}
+compras legítimas {fraud=legit}
+
+@fr
+essence {category=gas_transport}
+achats en ligne {channel=online}
+courses {category=grocery} | le mois dernier {date=last_month 2026-10-01..2026-10-31}
+restaurants {category=food_dining} | à new york {state=NY}
+vols {category=travel} | de plus de 500 dollars {amount=over 500-}
+fraude {fraud=fraud}
+transactions suspectes {fraud=fraud} | en ligne {channel=online}
+achats | de moins de 20 dollars {amount=under -20}
+salle de sport {category=health_fitness}
+coiffeur {category=personal_care}
+animalerie {category=kids_pets}
+vêtements {category=shopping} | en magasin {channel=in_person}
+entre 50 et 100 dollars {amount=between 50-100}
+le week-end {date=weekend dow:5,6}
+le vendredi {date=weekday dow:4}
+hier {date=yesterday 2026-11-23..2026-11-23}
+pas de fraude {fraud=legit}
+hôtels {category=travel} | en juillet {date=month 2026-07-01..2026-07-31}
+meubles {category=home} | en californie {state=CA}
+dépenses | au texas {state=TX} | ce mois-ci {date=this_month 2026-11-01..2026-11-24}
+environ 100 dollars {amount=around 90-110}
